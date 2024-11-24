@@ -1,16 +1,43 @@
 services:
-  mysql_bp:
-    image: mysql:latest
+  golang_api:
+    container_name: golang_api
+    build: ./app
+    image: ghcr.io/wojciechignasiak/golang_api:0.0.1
+    ports:
+      - 8080:80
+    expose:
+      - 80
+    networks:
+      - backend-network
+    restart: unless-stopped
+    # volumes:
+    #   - ./app:/golang_api
+    depends_on:
+      - mysql
+
+
+  mysql:
+    container_name: mysql
+    image: mysql:9.1.0
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: ${BLUEPRINT_DB_DATABASE}
-      MYSQL_USER: ${BLUEPRINT_DB_USERNAME}
-      MYSQL_PASSWORD: ${BLUEPRINT_DB_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${BLUEPRINT_DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DATABASE_NAME}
+      MYSQL_USER: ${DATABASE_USERNAME}
+      MYSQL_PASSWORD: ${DATABASE_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD}
+    networks:
+      - backend-network
     ports:
-      - "${BLUEPRINT_DB_PORT}:3306"
+      - "${DATABASE_PORT}:3306"
+    expose:
+      - 3306
     volumes:
       - mysql_volume_bp:/var/lib/mysql
 
 volumes:
   mysql_volume_bp:
+
+networks:
+  backend-network:
+    name: backend-network
+    driver: bridge
