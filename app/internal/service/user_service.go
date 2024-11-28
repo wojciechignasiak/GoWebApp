@@ -6,6 +6,7 @@ import (
 	"app/internal/model"
 	servicecomponent "app/internal/service_component"
 	"context"
+	"fmt"
 )
 
 type UserService interface {
@@ -28,12 +29,14 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 
 	validationError := newUser.ValidateCreateUser()
 	if validationError != nil {
+		args := fmt.Sprintf("newUser: %v", newUser)
 		serviceError := apperror.AppError{
-			StatusCode:    validationError.StatusCode,
-			Message:       validationError.Message,
-			ChildAppError: validationError,
-			ChildError:    validationError.ChildError,
-			Logging:       validationError.Logging,
+			StatusCode:      validationError.StatusCode,
+			Message:         validationError.Message,
+			StructAndMethod: "userService.CreateUser()",
+			Argument:        &args,
+			ChildAppError:   validationError,
+			ChildError:      validationError.ChildError,
 		}
 
 		return &serviceError
@@ -41,12 +44,14 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 
 	uow, err := us.uowFactory()
 	if err != nil {
+		args := fmt.Sprintf("newUser: %v", newUser)
 		serviceError := apperror.AppError{
-			StatusCode:    500,
-			Message:       "error occured while creating unit of work in user service",
-			ChildAppError: nil,
-			ChildError:    &err,
-			Logging:       true,
+			StatusCode:      500,
+			Message:         "error occured while creating unit of work in user service",
+			StructAndMethod: "userService.CreateUser()",
+			Argument:        &args,
+			ChildAppError:   nil,
+			ChildError:      &err,
 		}
 
 		return &serviceError
@@ -54,12 +59,14 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 
 	uowError := uow.BeginTransaction()
 	if uowError != nil {
+		args := fmt.Sprintf("newUser: %v", newUser)
 		serviceError := apperror.AppError{
-			StatusCode:    uowError.StatusCode,
-			Message:       uowError.Message,
-			ChildAppError: uowError,
-			ChildError:    uowError.ChildError,
-			Logging:       uowError.Logging,
+			StatusCode:      uowError.StatusCode,
+			Message:         uowError.Message,
+			StructAndMethod: "userService.CreateUser()",
+			Argument:        &args,
+			ChildAppError:   uowError,
+			ChildError:      uowError.ChildError,
 		}
 
 		return &serviceError
@@ -67,22 +74,27 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 
 	userWithTheSameEmail, repositoryError := uow.UserRepository().GetUserByEmail(ctx, newUser.Email)
 	if repositoryError != nil {
+		args := fmt.Sprintf("newUser: %v", newUser)
 		serviceError := apperror.AppError{
-			StatusCode:    repositoryError.StatusCode,
-			Message:       repositoryError.Message,
-			ChildAppError: repositoryError,
-			ChildError:    repositoryError.ChildError,
-			Logging:       repositoryError.Logging,
+			StatusCode:      repositoryError.StatusCode,
+			Message:         repositoryError.Message,
+			StructAndMethod: "userService.CreateUser()",
+			Argument:        &args,
+			ChildAppError:   repositoryError,
+			ChildError:      repositoryError.ChildError,
 		}
 
 		return &serviceError
 	}
 	if userWithTheSameEmail != nil {
+		args := fmt.Sprintf("newUser: %v", newUser)
 		serviceError := apperror.AppError{
-			StatusCode: 409,
-			Message:    "email adress already in use",
-			ChildError: nil,
-			Logging:    false,
+			StatusCode:      409,
+			Message:         "email adress already in use",
+			StructAndMethod: "userService.CreateUser()",
+			Argument:        &args,
+			ChildAppError:   nil,
+			ChildError:      nil,
 		}
 
 		return &serviceError
@@ -90,22 +102,27 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 
 	userWithTheSameUsername, repositoryError := uow.UserRepository().GetUserByUsername(ctx, newUser.Username)
 	if repositoryError != nil {
+		args := fmt.Sprintf("newUser: %v", newUser)
 		serviceError := apperror.AppError{
-			StatusCode:    repositoryError.StatusCode,
-			Message:       repositoryError.Message,
-			ChildAppError: repositoryError,
-			ChildError:    repositoryError.ChildError,
-			Logging:       repositoryError.Logging,
+			StatusCode:      repositoryError.StatusCode,
+			Message:         repositoryError.Message,
+			StructAndMethod: "userService.CreateUser()",
+			Argument:        &args,
+			ChildAppError:   repositoryError,
+			ChildError:      repositoryError.ChildError,
 		}
 
 		return &serviceError
 	}
 	if userWithTheSameUsername != nil {
+		args := fmt.Sprintf("newUser: %v", newUser)
 		serviceError := apperror.AppError{
-			StatusCode: 409,
-			Message:    "username adress already in use",
-			ChildError: nil,
-			Logging:    false,
+			StatusCode:      409,
+			Message:         "Username adress already in use",
+			StructAndMethod: "userService.CreateUser()",
+			Argument:        &args,
+			ChildAppError:   nil,
+			ChildError:      nil,
 		}
 		return &serviceError
 
@@ -113,12 +130,14 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 
 	uuid, generationError := us.ct.GenerateUUID()
 	if generationError != nil {
+		args := fmt.Sprintf("newUser: %v", newUser)
 		serviceError := apperror.AppError{
-			StatusCode:    generationError.StatusCode,
-			Message:       generationError.Message,
-			ChildAppError: generationError,
-			ChildError:    generationError.ChildError,
-			Logging:       generationError.Logging,
+			StatusCode:      generationError.StatusCode,
+			Message:         generationError.Message,
+			StructAndMethod: "userService.CreateUser()",
+			Argument:        &args,
+			ChildAppError:   generationError,
+			ChildError:      generationError.ChildError,
 		}
 
 		return &serviceError
@@ -126,12 +145,14 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 
 	salt, generationError := us.ct.GenerateSalt(16)
 	if generationError != nil {
+		args := fmt.Sprintf("newUser: %v", newUser)
 		serviceError := apperror.AppError{
-			StatusCode:    generationError.StatusCode,
-			Message:       generationError.Message,
-			ChildAppError: generationError,
-			ChildError:    generationError.ChildError,
-			Logging:       generationError.Logging,
+			StatusCode:      generationError.StatusCode,
+			Message:         generationError.Message,
+			StructAndMethod: "userService.CreateUser()",
+			Argument:        &args,
+			ChildAppError:   generationError,
+			ChildError:      generationError.ChildError,
 		}
 
 		return &serviceError
@@ -161,12 +182,14 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 
 	repositoryError = uow.UserRepository().CreateUser(ctx, user)
 	if repositoryError != nil {
+		args := fmt.Sprintf("newUser: %v", newUser)
 		serviceError := apperror.AppError{
-			StatusCode:    repositoryError.StatusCode,
-			Message:       repositoryError.Message,
-			ChildAppError: repositoryError,
-			ChildError:    repositoryError.ChildError,
-			Logging:       repositoryError.Logging,
+			StatusCode:      repositoryError.StatusCode,
+			Message:         repositoryError.Message,
+			StructAndMethod: "userService.CreateUser()",
+			Argument:        &args,
+			ChildAppError:   repositoryError,
+			ChildError:      repositoryError.ChildError,
 		}
 
 		return &serviceError
@@ -178,12 +201,14 @@ func (us *userService) GetUserByEmail(ctx context.Context, email string) (*model
 	uow, err := us.uowFactory()
 
 	if err != nil {
+		args := fmt.Sprintf("newUser: %s", email)
 		serviceError := apperror.AppError{
-			StatusCode:    500,
-			Message:       "error occured while creating unit of work in user service",
-			ChildAppError: nil,
-			ChildError:    &err,
-			Logging:       true,
+			StatusCode:      500,
+			Message:         "Error occured while creating unit of work in user service",
+			StructAndMethod: "userService.GetUserByEmail()",
+			Argument:        &args,
+			ChildAppError:   nil,
+			ChildError:      &err,
 		}
 
 		return nil, &serviceError
@@ -192,12 +217,14 @@ func (us *userService) GetUserByEmail(ctx context.Context, email string) (*model
 	user, repositoryError := uow.UserRepository().GetUserByEmail(ctx, email)
 
 	if repositoryError != nil {
+		args := fmt.Sprintf("newUser: %s", email)
 		serviceError := apperror.AppError{
-			StatusCode:    repositoryError.StatusCode,
-			Message:       repositoryError.Message,
-			ChildAppError: repositoryError,
-			ChildError:    repositoryError.ChildError,
-			Logging:       repositoryError.Logging,
+			StatusCode:      repositoryError.StatusCode,
+			Message:         repositoryError.Message,
+			StructAndMethod: "userService.GetUserByEmail()",
+			Argument:        &args,
+			ChildAppError:   repositoryError,
+			ChildError:      repositoryError.ChildError,
 		}
 
 		return nil, &serviceError
@@ -210,12 +237,14 @@ func (us *userService) GetUserByUsername(ctx context.Context, username string) (
 	uow, err := us.uowFactory()
 
 	if err != nil {
+		args := fmt.Sprintf("newUser: %s", username)
 		serviceError := apperror.AppError{
-			StatusCode:    500,
-			Message:       "error occured while creating unit of work in user service",
-			ChildAppError: nil,
-			ChildError:    &err,
-			Logging:       true,
+			StatusCode:      500,
+			Message:         "Error occured while creating unit of work in user service",
+			StructAndMethod: "userService.GetUserByUsername()",
+			Argument:        &args,
+			ChildAppError:   nil,
+			ChildError:      &err,
 		}
 
 		return nil, &serviceError
@@ -224,12 +253,14 @@ func (us *userService) GetUserByUsername(ctx context.Context, username string) (
 	user, repositoryError := uow.UserRepository().GetUserByUsername(ctx, username)
 
 	if repositoryError != nil {
+		args := fmt.Sprintf("newUser: %s", username)
 		serviceError := apperror.AppError{
-			StatusCode:    repositoryError.StatusCode,
-			Message:       repositoryError.Message,
-			ChildAppError: repositoryError,
-			ChildError:    repositoryError.ChildError,
-			Logging:       repositoryError.Logging,
+			StatusCode:      repositoryError.StatusCode,
+			Message:         repositoryError.Message,
+			StructAndMethod: "userService.GetUserByUsername()",
+			Argument:        &args,
+			ChildAppError:   repositoryError,
+			ChildError:      repositoryError.ChildError,
 		}
 
 		return nil, &serviceError

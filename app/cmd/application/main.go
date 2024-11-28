@@ -3,6 +3,7 @@ package main
 import (
 	"app/internal/controller"
 	"app/internal/database"
+	"app/internal/logs"
 	"app/internal/server"
 	"app/internal/service"
 	servicecomponent "app/internal/service_component"
@@ -29,7 +30,7 @@ func main() {
 	}
 
 	userService := service.NewUserService(uowFactory, commonTools)
-	requestLogger := controller.NewRequestLogger()
+	requestLogger := logs.NewRequestLogger()
 	userController := controller.NewUserController(userService, requestLogger)
 	server := server.NewServer(
 		"",

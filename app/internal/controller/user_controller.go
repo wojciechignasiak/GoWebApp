@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"app/internal/logs"
 	"app/internal/model"
 	"app/internal/service"
 	"encoding/json"
@@ -9,11 +10,11 @@ import (
 )
 
 type UserController struct {
-	requestLogger RequestLogger
+	requestLogger logs.RequestLogger
 	userService   service.UserService
 }
 
-func NewUserController(userService service.UserService, requestLogger RequestLogger) *UserController {
+func NewUserController(userService service.UserService, requestLogger logs.RequestLogger) *UserController {
 	return &UserController{
 		requestLogger: requestLogger,
 		userService:   userService,
@@ -34,15 +35,15 @@ func (uc *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
 	serviceError := uc.userService.CreateUser(ctx, newUser)
 
 	if serviceError != nil {
-		if serviceError.StatusCode == 400 {
+
+		switch serviceError.StatusCode {
+		case 400:
 			uc.requestLogger.LogRequest(400, "/user/create")
 			http.Error(w, "message: "+serviceError.Message, http.StatusBadRequest)
-		}
-		if serviceError.StatusCode == 409 {
+		case 409:
 			uc.requestLogger.LogRequest(409, "/user/create")
 			http.Error(w, "message: "+serviceError.Message, http.StatusConflict)
-		}
-		if serviceError.StatusCode == 500 {
+		case 500:
 			uc.requestLogger.LogRequest(500, "/user/create")
 			http.Error(w, "message: Internal Server Error", http.StatusInternalServerError)
 		}

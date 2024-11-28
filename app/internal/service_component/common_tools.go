@@ -3,6 +3,7 @@ package servicecomponent
 import (
 	apperror "app/internal/app_error"
 	"crypto/rand"
+	"fmt"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/argon2"
@@ -24,11 +25,12 @@ func (ct *commonTools) GenerateUUID() (*uuid.UUID, *apperror.AppError) {
 	newUUID, err := uuid.NewV7()
 	if err != nil {
 		generationError := apperror.AppError{
-			StatusCode:    500,
-			Message:       "error occured while generating new UUID",
-			ChildAppError: nil,
-			ChildError:    &err,
-			Logging:       true,
+			StatusCode:      500,
+			Message:         "Error occured while generating new UUID",
+			StructAndMethod: "commonTools.GenerateUUID()",
+			Argument:        nil,
+			ChildAppError:   nil,
+			ChildError:      &err,
 		}
 		return nil, &generationError
 	}
@@ -39,12 +41,14 @@ func (ct *commonTools) GenerateSalt(length int) (*[]byte, *apperror.AppError) {
 	salt := make([]byte, length)
 	_, err := rand.Read(salt)
 	if err != nil {
+		args := fmt.Sprintf("length: %d", length)
 		generationError := apperror.AppError{
-			StatusCode:    500,
-			Message:       "error occured while generating salt",
-			ChildAppError: nil,
-			ChildError:    &err,
-			Logging:       true,
+			StatusCode:      500,
+			Message:         "Error occured while generating salt",
+			StructAndMethod: "commonTools.GenerateSalt()",
+			Argument:        &args,
+			ChildAppError:   nil,
+			ChildError:      &err,
 		}
 		return nil, &generationError
 	}

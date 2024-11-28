@@ -30,11 +30,12 @@ func NewUnitOfWork(db *sql.DB) UnitOfWork {
 func (u *unitOfWork) BeginTransaction() *apperror.AppError {
 	if u.tx != nil {
 		uowError := apperror.AppError{
-			StatusCode:    500,
-			Message:       "transaction already started",
-			ChildAppError: nil,
-			ChildError:    nil,
-			Logging:       false,
+			StatusCode:      500,
+			Message:         "Transaction already started",
+			StructAndMethod: "unitOfWork.BeginTransaction()",
+			Argument:        nil,
+			ChildAppError:   nil,
+			ChildError:      nil,
 		}
 		return &uowError
 	}
@@ -42,11 +43,12 @@ func (u *unitOfWork) BeginTransaction() *apperror.AppError {
 	u.tx, err = u.db.Begin()
 	if err != nil {
 		uowError := apperror.AppError{
-			StatusCode:    500,
-			Message:       "failed to begin transaction",
-			ChildAppError: nil,
-			ChildError:    &err,
-			Logging:       true,
+			StatusCode:      500,
+			Message:         "Failed to begin transaction",
+			StructAndMethod: "unitOfWork.BeginTransaction()",
+			Argument:        nil,
+			ChildAppError:   nil,
+			ChildError:      &err,
 		}
 		return &uowError
 	}
@@ -64,21 +66,21 @@ func (u *unitOfWork) Commit() *apperror.AppError {
 	if u.tx == nil {
 		uowError := apperror.AppError{
 			StatusCode:    500,
-			Message:       "transaction already closed",
+			Message:       "Transaction already closed",
 			ChildAppError: nil,
 			ChildError:    nil,
-			Logging:       false,
 		}
 		return &uowError
 	}
 	err := u.tx.Commit()
 	if err != nil {
 		uowError := apperror.AppError{
-			StatusCode:    500,
-			Message:       "error occured while commiting changes to database",
-			ChildAppError: nil,
-			ChildError:    &err,
-			Logging:       true,
+			StatusCode:      500,
+			Message:         "Error occured while commiting changes to database",
+			StructAndMethod: "unitOfWork.Commit()",
+			Argument:        nil,
+			ChildAppError:   nil,
+			ChildError:      &err,
 		}
 		return &uowError
 	}
@@ -89,22 +91,24 @@ func (u *unitOfWork) Commit() *apperror.AppError {
 func (u *unitOfWork) Rollback() *apperror.AppError {
 	if u.tx == nil {
 		uowError := apperror.AppError{
-			StatusCode:    500,
-			Message:       "transaction already closed",
-			ChildAppError: nil,
-			ChildError:    nil,
-			Logging:       false,
+			StatusCode:      500,
+			Message:         "Transaction already closed",
+			StructAndMethod: "unitOfWork.BeginRollback()",
+			Argument:        nil,
+			ChildAppError:   nil,
+			ChildError:      nil,
 		}
 		return &uowError
 	}
 	err := u.tx.Rollback()
 	if err != nil {
 		uowError := apperror.AppError{
-			StatusCode:    500,
-			Message:       "error occured while rolling back changes",
-			ChildAppError: nil,
-			ChildError:    &err,
-			Logging:       true,
+			StatusCode:      500,
+			Message:         "Error occured while rolling back changes",
+			StructAndMethod: "unitOfWork.BeginRollback()",
+			Argument:        nil,
+			ChildAppError:   nil,
+			ChildError:      &err,
 		}
 		return &uowError
 	}

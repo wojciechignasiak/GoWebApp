@@ -2,6 +2,7 @@ package model
 
 import (
 	apperror "app/internal/app_error"
+	"fmt"
 	"regexp"
 	"unicode"
 
@@ -42,12 +43,14 @@ func (cu *CreateUser) ValidateCreateUser() *apperror.AppError {
 
 func validateUsername(username string) *apperror.AppError {
 	if len(username) < 5 || len(username) > 20 {
+		args := fmt.Sprintf("username: %s", username)
 		validationError := apperror.AppError{
-			StatusCode:    400,
-			Message:       "username must contain between 5 and 20 characters",
-			ChildAppError: nil,
-			ChildError:    nil,
-			Logging:       false,
+			StatusCode:      400,
+			Message:         "Username must contain between 5 and 20 characters",
+			StructAndMethod: "CreateUser.validateUsername()",
+			Argument:        &args,
+			ChildAppError:   nil,
+			ChildError:      nil,
 		}
 		return &validationError
 	}
@@ -56,22 +59,26 @@ func validateUsername(username string) *apperror.AppError {
 
 func validateEmails(email, confirmEmail string) *apperror.AppError {
 	if email != confirmEmail {
+		args := fmt.Sprintf("confirmEmail: %s", confirmEmail)
 		validationError := apperror.AppError{
-			StatusCode:    400,
-			Message:       "provided emails do not match",
-			ChildAppError: nil,
-			ChildError:    nil,
-			Logging:       false,
+			StatusCode:      400,
+			Message:         "Provided emails do not match",
+			StructAndMethod: "CreateUser.validateEmails()",
+			Argument:        &args,
+			ChildAppError:   nil,
+			ChildError:      nil,
 		}
 		return &validationError
 	}
 	if !isValidEmail(email) {
+		args := fmt.Sprintf("confirmEmail: %s", confirmEmail)
 		validationError := apperror.AppError{
-			StatusCode:    400,
-			Message:       "invalid email format",
-			ChildAppError: nil,
-			ChildError:    nil,
-			Logging:       false,
+			StatusCode:      400,
+			Message:         "Invalid email format",
+			StructAndMethod: "CreateUser.validateEmails()",
+			Argument:        &args,
+			ChildAppError:   nil,
+			ChildError:      nil,
 		}
 		return &validationError
 	}
@@ -81,22 +88,24 @@ func validateEmails(email, confirmEmail string) *apperror.AppError {
 func validatePasswords(password, confirmPassword string) *apperror.AppError {
 	if password != confirmPassword {
 		validationError := apperror.AppError{
-			StatusCode:    400,
-			Message:       "provided passwords are not the same",
-			ChildAppError: nil,
-			ChildError:    nil,
-			Logging:       false,
+			StatusCode:      400,
+			Message:         "Provided passwords are not the same",
+			StructAndMethod: "CreateUser.validatePasswords()",
+			Argument:        nil,
+			ChildAppError:   nil,
+			ChildError:      nil,
 		}
 		return &validationError
 
 	}
 	if len(password) < 8 {
 		validationError := apperror.AppError{
-			StatusCode:    400,
-			Message:       "password must contain at least 8 characters",
-			ChildAppError: nil,
-			ChildError:    nil,
-			Logging:       false,
+			StatusCode:      400,
+			Message:         "Password must contain at least 8 characters",
+			StructAndMethod: "CreateUser.validatePasswords()",
+			Argument:        nil,
+			ChildAppError:   nil,
+			ChildError:      nil,
 		}
 		return &validationError
 	}
@@ -115,11 +124,12 @@ func validatePasswords(password, confirmPassword string) *apperror.AppError {
 
 	if !hasDigit || !hasSpecial {
 		validationError := apperror.AppError{
-			StatusCode:    403,
-			Message:       "password must contain at least one digit and one special character",
-			ChildAppError: nil,
-			ChildError:    nil,
-			Logging:       false,
+			StatusCode:      403,
+			Message:         "Password must contain at least one digit and one special character",
+			StructAndMethod: "CreateUser.validatePasswords()",
+			Argument:        nil,
+			ChildAppError:   nil,
+			ChildError:      nil,
 		}
 		return &validationError
 	}
@@ -130,11 +140,12 @@ func validatePasswords(password, confirmPassword string) *apperror.AppError {
 func validatePhoneNumber(phoneNumber string) *apperror.AppError {
 	if !isValidPhoneNumber(phoneNumber) {
 		validationError := apperror.AppError{
-			StatusCode:    403,
-			Message:       "invalid phone number format",
-			ChildAppError: nil,
-			ChildError:    nil,
-			Logging:       false,
+			StatusCode:      403,
+			Message:         "Invalid phone number format",
+			StructAndMethod: "CreateUser.validatePhoneNumber()",
+			Argument:        nil,
+			ChildAppError:   nil,
+			ChildError:      nil,
 		}
 		return &validationError
 	}

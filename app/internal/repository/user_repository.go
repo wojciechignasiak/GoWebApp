@@ -5,6 +5,7 @@ import (
 	"app/internal/model"
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -23,7 +24,7 @@ type userRepository struct {
 
 func NewUserRepository(tx *sql.Tx, db *sql.DB) *userRepository {
 	if db == nil && tx == nil {
-		panic("missing connection and transaction in UserRepository.")
+		panic("Missing connection and transaction in UserRepository.")
 	}
 	return &userRepository{
 		tx: tx,
@@ -38,12 +39,14 @@ func (ur *userRepository) CreateUser(ctx context.Context, user model.User) *appe
 	`
 	_, err := ur.tx.ExecContext(ctx, query, user.Id, user.Username, user.Email, user.Password, user.Salt, user.PhoneNumber)
 	if err != nil {
+		args := fmt.Sprintf("user: %v", user)
 		repositoryError := apperror.AppError{
-			StatusCode:    500,
-			Message:       "database error occurred while trying to create a new user",
-			ChildAppError: nil,
-			ChildError:    &err,
-			Logging:       true,
+			StatusCode:      500,
+			Message:         "Database error occurred while trying to create a new user",
+			StructAndMethod: "userRepository.CreateUser()",
+			Argument:        &args,
+			ChildAppError:   nil,
+			ChildError:      &err,
 		}
 		return &repositoryError
 	}
@@ -60,12 +63,14 @@ func (ur *userRepository) GetUserById(ctx context.Context, id uuid.UUID) (*model
 		if err == sql.ErrNoRows {
 			return nil, nil
 		} else {
+			args := fmt.Sprintf("id: %s", id)
 			repositoryError := apperror.AppError{
-				StatusCode:    500,
-				Message:       "database error occurred while trying to get user by id",
-				ChildAppError: nil,
-				ChildError:    &err,
-				Logging:       true,
+				StatusCode:      500,
+				Message:         "Database error occurred while trying to get user by id",
+				StructAndMethod: "userRepository.GetUserById()",
+				Argument:        &args,
+				ChildAppError:   nil,
+				ChildError:      &err,
 			}
 			return nil, &repositoryError
 		}
@@ -83,12 +88,14 @@ func (ur *userRepository) GetUserByEmail(ctx context.Context, email string) (*mo
 		if err == sql.ErrNoRows {
 			return nil, nil
 		} else {
+			args := fmt.Sprintf("email: %s", email)
 			repositoryError := apperror.AppError{
-				StatusCode:    500,
-				Message:       "database error occurred while trying to get user by email",
-				ChildAppError: nil,
-				ChildError:    &err,
-				Logging:       true,
+				StatusCode:      500,
+				Message:         "Database error occurred while trying to get user by email",
+				StructAndMethod: "userRepository.GetUserByEmail()",
+				Argument:        &args,
+				ChildAppError:   nil,
+				ChildError:      &err,
 			}
 			return nil, &repositoryError
 		}
@@ -107,12 +114,14 @@ func (ur *userRepository) GetUserByUsername(ctx context.Context, username string
 		if err == sql.ErrNoRows {
 			return nil, nil
 		} else {
+			args := fmt.Sprintf("username: %s", username)
 			repositoryError := apperror.AppError{
-				StatusCode:    500,
-				Message:       "database error occurred while trying to get user by username",
-				ChildAppError: nil,
-				ChildError:    &err,
-				Logging:       true,
+				StatusCode:      500,
+				Message:         "Database error occurred while trying to get user by username",
+				StructAndMethod: "userRepository.GetUserByUsername()",
+				Argument:        &args,
+				ChildAppError:   nil,
+				ChildError:      &err,
 			}
 			return nil, &repositoryError
 		}

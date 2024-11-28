@@ -1,4 +1,4 @@
-package controller
+package logs
 
 import (
 	"log"
@@ -14,5 +14,5 @@ func NewRequestLogger() *requestLogger {
 	return &requestLogger{}
 }
 func (rl *requestLogger) LogRequest(statusCode int, controllerAddress string) {
-	log.Printf("Status: %d Address: %s", statusCode, controllerAddress)
+	log.Printf("Status Code: %d Address: %s", statusCode, controllerAddress)
 }
