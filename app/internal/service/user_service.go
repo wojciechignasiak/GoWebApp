@@ -29,6 +29,8 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 
 	validationError := newUser.ValidateCreateUser()
 	if validationError != nil {
+		newUser.Password = "anonimized"
+		newUser.ConfirmPassword = "anonimized"
 		args := fmt.Sprintf("newUser: %v", newUser)
 		serviceError := apperror.AppError{
 			StatusCode:      validationError.StatusCode,
@@ -44,6 +46,8 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 
 	uow, err := us.uowFactory()
 	if err != nil {
+		newUser.Password = "anonimized"
+		newUser.ConfirmPassword = "anonimized"
 		args := fmt.Sprintf("newUser: %v", newUser)
 		serviceError := apperror.AppError{
 			StatusCode:      500,
@@ -59,6 +63,8 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 
 	uowError := uow.BeginTransaction()
 	if uowError != nil {
+		newUser.Password = "anonimized"
+		newUser.ConfirmPassword = "anonimized"
 		args := fmt.Sprintf("newUser: %v", newUser)
 		serviceError := apperror.AppError{
 			StatusCode:      uowError.StatusCode,
@@ -87,6 +93,8 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 		return &serviceError
 	}
 	if userWithTheSameEmail != nil {
+		newUser.Password = "anonimized"
+		newUser.ConfirmPassword = "anonimized"
 		args := fmt.Sprintf("newUser: %v", newUser)
 		serviceError := apperror.AppError{
 			StatusCode:      409,
@@ -102,6 +110,8 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 
 	userWithTheSameUsername, repositoryError := uow.UserRepository().GetUserByUsername(ctx, newUser.Username)
 	if repositoryError != nil {
+		newUser.Password = "anonimized"
+		newUser.ConfirmPassword = "anonimized"
 		args := fmt.Sprintf("newUser: %v", newUser)
 		serviceError := apperror.AppError{
 			StatusCode:      repositoryError.StatusCode,
@@ -115,6 +125,8 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 		return &serviceError
 	}
 	if userWithTheSameUsername != nil {
+		newUser.Password = "anonimized"
+		newUser.ConfirmPassword = "anonimized"
 		args := fmt.Sprintf("newUser: %v", newUser)
 		serviceError := apperror.AppError{
 			StatusCode:      409,
@@ -130,6 +142,8 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 
 	uuid, generationError := us.ct.GenerateUUID()
 	if generationError != nil {
+		newUser.Password = "anonimized"
+		newUser.ConfirmPassword = "anonimized"
 		args := fmt.Sprintf("newUser: %v", newUser)
 		serviceError := apperror.AppError{
 			StatusCode:      generationError.StatusCode,
@@ -145,6 +159,8 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 
 	salt, generationError := us.ct.GenerateSalt(16)
 	if generationError != nil {
+		newUser.Password = "anonimized"
+		newUser.ConfirmPassword = "anonimized"
 		args := fmt.Sprintf("newUser: %v", newUser)
 		serviceError := apperror.AppError{
 			StatusCode:      generationError.StatusCode,
@@ -182,6 +198,8 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 
 	repositoryError = uow.UserRepository().CreateUser(ctx, user)
 	if repositoryError != nil {
+		newUser.Password = "anonimized"
+		newUser.ConfirmPassword = "anonimized"
 		args := fmt.Sprintf("newUser: %v", newUser)
 		serviceError := apperror.AppError{
 			StatusCode:      repositoryError.StatusCode,

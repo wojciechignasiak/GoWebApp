@@ -30,8 +30,8 @@ func main() {
 	}
 
 	userService := service.NewUserService(uowFactory, commonTools)
-	requestLogger := logs.NewRequestLogger()
-	userController := controller.NewUserController(userService, requestLogger)
+	logger := logs.NewLogger()
+	userController := controller.NewUserController(userService, logger)
 	server := server.NewServer(
 		"",
 		80,

@@ -10,14 +10,14 @@ import (
 )
 
 type UserController struct {
-	requestLogger logs.RequestLogger
-	userService   service.UserService
+	logger      logs.Logger
+	userService service.UserService
 }
 
-func NewUserController(userService service.UserService, requestLogger logs.RequestLogger) *UserController {
+func NewUserController(userService service.UserService, logger logs.Logger) *UserController {
 	return &UserController{
-		requestLogger: requestLogger,
-		userService:   userService,
+		logger:      logger,
+		userService: userService,
 	}
 }
 
@@ -38,13 +38,14 @@ func (uc *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 		switch serviceError.StatusCode {
 		case 400:
-			uc.requestLogger.LogRequest(400, "/user/create")
+			uc.logger.LogRequest(400, "/user/create")
 			http.Error(w, "message: "+serviceError.Message, http.StatusBadRequest)
 		case 409:
-			uc.requestLogger.LogRequest(409, "/user/create")
+			uc.logger.LogRequest(409, "/user/create")
 			http.Error(w, "message: "+serviceError.Message, http.StatusConflict)
 		case 500:
-			uc.requestLogger.LogRequest(500, "/user/create")
+			uc.logger.LogRequest(500, "/user/create")
+			uc.logger.LogAppError(serviceError)
 			http.Error(w, "message: Internal Server Error", http.StatusInternalServerError)
 		}
 		return
@@ -59,5 +60,5 @@ func (uc *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(jsonResponse)
-	uc.requestLogger.LogRequest(200, "/user/create")
+	uc.logger.LogRequest(200, "/user/create")
 }
