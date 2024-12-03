@@ -4,6 +4,7 @@ import (
 	apperror "app/internal/app_error"
 	"fmt"
 	"regexp"
+	"time"
 	"unicode"
 
 	"github.com/google/uuid"
@@ -163,17 +164,23 @@ func isValidPhoneNumber(phoneNumber string) bool {
 }
 
 type User struct {
-	Id          uuid.UUID `json:"id" db:"id"`
-	Username    string    `json:"username" db:"username"`
-	Email       string    `json:"email" db:"email"`
-	Password    []byte    `json:"password" db:"password"`
-	Salt        []byte    `json:"salt" db:"salt"`
-	PhoneNumber *string   `json:"phone_number" db:"phone_number"`
+	Id                 uuid.UUID  `json:"id" db:"id"`
+	Username           string     `json:"username" db:"username"`
+	Email              string     `json:"email" db:"email"`
+	Password           []byte     `json:"password" db:"password"`
+	Salt               []byte     `json:"salt" db:"salt"`
+	PhoneNumber        *string    `json:"phone_number" db:"phone_number"`
+	RegistrationDate   *time.Time `json:"registration_date" db:"registration_date"`
+	IsAccountConfirmed bool       `json:"is_account_confirmed" db:"is_account_confirmed"`
+	IsAccountDeleted   bool       `json:"is_account_deleted" db:"is_account_deleted"`
 }
 
 type ReturnUser struct {
-	Id          uuid.UUID `json:"id"`
-	Username    string    `json:"username"`
-	Email       string    `json:"email"`
-	PhoneNumber *string   `json:"phone_number"`
+	Id                 uuid.UUID `json:"id"`
+	Username           string    `json:"username"`
+	Email              string    `json:"email"`
+	PhoneNumber        *string   `json:"phone_number"`
+	RegistrationDate   time.Time `json:"registration_date" db:"registration_date"`
+	IsAccountConfirmed bool      `json:"is_account_confirmed" db:"is_account_confirmed"`
+	IsAccountDeleted   bool      `json:"is_account_deleted" db:"is_account_deleted"`
 }
