@@ -7,6 +7,8 @@ import (
 	servicecomponent "app/internal/service_component"
 	"context"
 	"fmt"
+
+	"github.com/google/uuid"
 )
 
 type UserService interface {
@@ -63,6 +65,7 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 
 	uowError := uow.BeginTransaction()
 	if uowError != nil {
+		uow.Rollback()
 		newUser.Password = "anonimized"
 		newUser.ConfirmPassword = "anonimized"
 		args := fmt.Sprintf("newUser: %v", newUser)
@@ -80,6 +83,7 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 
 	userWithTheSameEmail, repositoryError := uow.UserRepository().GetUserByEmail(ctx, newUser.Email)
 	if repositoryError != nil {
+		uow.Rollback()
 		args := fmt.Sprintf("newUser: %v", newUser)
 		serviceError := apperror.AppError{
 			StatusCode:      repositoryError.StatusCode,
@@ -93,6 +97,7 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 		return &serviceError
 	}
 	if userWithTheSameEmail != nil {
+		uow.Rollback()
 		newUser.Password = "anonimized"
 		newUser.ConfirmPassword = "anonimized"
 		args := fmt.Sprintf("newUser: %v", newUser)
@@ -140,7 +145,7 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 
 	}
 
-	uuid, generationError := us.ct.GenerateUUID()
+	userUuid, generationError := us.ct.GenerateUUID()
 	if generationError != nil {
 		newUser.Password = "anonimized"
 		newUser.ConfirmPassword = "anonimized"
@@ -153,7 +158,6 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 			ChildAppError:   generationError,
 			ChildError:      generationError.ChildError,
 		}
-
 		return &serviceError
 	}
 
@@ -177,7 +181,7 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 	hashedPassword := us.ct.HashPassword(newUser.Password, *salt)
 
 	user := model.User{
-		Id:          *uuid,
+		Id:          *userUuid,
 		Username:    newUser.Username,
 		Email:       newUser.Email,
 		Password:    hashedPassword,
@@ -185,19 +189,9 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 		PhoneNumber: newUser.PhoneNumber,
 	}
 
-	defer func() {
-		if p := recover(); p != nil {
-			_ = uow.Rollback()
-			panic(p)
-		} else if err != nil {
-			_ = uow.Rollback()
-		} else {
-			_ = uow.Commit()
-		}
-	}()
-
 	repositoryError = uow.UserRepository().CreateUser(ctx, user)
 	if repositoryError != nil {
+		uow.Rollback()
 		newUser.Password = "anonimized"
 		newUser.ConfirmPassword = "anonimized"
 		args := fmt.Sprintf("newUser: %v", newUser)
@@ -209,9 +203,63 @@ func (us *userService) CreateUser(ctx context.Context, newUser model.CreateUser)
 			ChildAppError:   repositoryError,
 			ChildError:      repositoryError.ChildError,
 		}
-
 		return &serviceError
 	}
+
+	serviceError := us.createAccountConfirmation(ctx, uow, user.Id)
+	if serviceError != nil {
+		uow.Rollback()
+		newUser.Password = "anonimized"
+		newUser.ConfirmPassword = "anonimized"
+		args := fmt.Sprintf("newUser: %v", newUser)
+		serviceError := apperror.AppError{
+			StatusCode:      serviceError.StatusCode,
+			Message:         serviceError.Message,
+			StructAndMethod: "userService.CreateUser()",
+			Argument:        &args,
+			ChildAppError:   serviceError,
+			ChildError:      serviceError.ChildError,
+		}
+		return &serviceError
+	}
+
+	uow.Commit()
+	return nil
+}
+
+func (us *userService) createAccountConfirmation(ctx context.Context, uow database.UnitOfWork, userId uuid.UUID) *apperror.AppError {
+	accountConfirmationUuid, generationError := us.ct.GenerateUUID()
+	if generationError != nil {
+		args := fmt.Sprintf("userId: %v", userId)
+		serviceError := apperror.AppError{
+			StatusCode:      generationError.StatusCode,
+			Message:         generationError.Message,
+			StructAndMethod: "userService.createAccountConfirmation()",
+			Argument:        &args,
+			ChildAppError:   generationError,
+			ChildError:      generationError.ChildError,
+		}
+		return &serviceError
+	}
+	accountConfirmation := model.AccountConfirmation{
+		UserId:           userId,
+		ConfirmationCode: *accountConfirmationUuid,
+	}
+
+	repositoryError := uow.UserRepository().CreateAccountConfirmation(ctx, accountConfirmation)
+	if repositoryError != nil {
+		args := fmt.Sprintf("userId: %v", userId)
+		serviceError := apperror.AppError{
+			StatusCode:      repositoryError.StatusCode,
+			Message:         repositoryError.Message,
+			StructAndMethod: "userService.createAccountConfirmation()",
+			Argument:        &args,
+			ChildAppError:   repositoryError,
+			ChildError:      repositoryError.ChildError,
+		}
+		return &serviceError
+	}
+
 	return nil
 }
 

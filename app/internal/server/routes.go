@@ -7,6 +7,6 @@ import (
 func (s *Server) RegisterRoutes() http.Handler {
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/user/create", s.userController.CreateUser)
+	mux.HandleFunc("/user/register", s.userController.RegisterUser)
 	return mux
 }

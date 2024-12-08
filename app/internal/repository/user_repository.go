@@ -15,6 +15,7 @@ type UserRepository interface {
 	GetUserById(ctx context.Context, id uuid.UUID) (*model.User, *apperror.AppError)
 	GetUserByEmail(ctx context.Context, email string) (*model.User, *apperror.AppError)
 	GetUserByUsername(ctx context.Context, username string) (*model.User, *apperror.AppError)
+	CreateAccountConfirmation(ctx context.Context, accountConfirmation model.AccountConfirmation) *apperror.AppError
 }
 
 type userRepository struct {
@@ -50,7 +51,6 @@ func (ur *userRepository) CreateUser(ctx context.Context, user model.User) *appe
 		}
 		return &repositoryError
 	}
-
 	return nil
 }
 
@@ -58,7 +58,7 @@ func (ur *userRepository) GetUserById(ctx context.Context, id uuid.UUID) (*model
 	query := `SELECT * FROM user WHERE id = ?;`
 	row := ur.db.QueryRowContext(ctx, query, id)
 	var user model.User
-	err := row.Scan(&user.Id, &user.Username, &user.Email, &user.Password, &user.Salt, &user.PhoneNumber)
+	err := row.Scan(&user.Id, &user.Username, &user.Email, &user.Password, &user.Salt, &user.PhoneNumber, &user.RegistrationDate, &user.IsAccountConfirmed, &user.IsAccountDeleted)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -75,7 +75,6 @@ func (ur *userRepository) GetUserById(ctx context.Context, id uuid.UUID) (*model
 			return nil, &repositoryError
 		}
 	}
-
 	return &user, nil
 }
 
@@ -83,7 +82,7 @@ func (ur *userRepository) GetUserByEmail(ctx context.Context, email string) (*mo
 	query := `SELECT * FROM user WHERE email = ?;`
 	row := ur.db.QueryRowContext(ctx, query, email)
 	var user model.User
-	err := row.Scan(&user.Id, &user.Username, &user.Email, &user.Password, &user.Salt, &user.PhoneNumber)
+	err := row.Scan(&user.Id, &user.Username, &user.Email, &user.Password, &user.Salt, &user.PhoneNumber, &user.RegistrationDate, &user.IsAccountConfirmed, &user.IsAccountDeleted)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -99,9 +98,7 @@ func (ur *userRepository) GetUserByEmail(ctx context.Context, email string) (*mo
 			}
 			return nil, &repositoryError
 		}
-
 	}
-
 	return &user, nil
 }
 
@@ -109,7 +106,7 @@ func (ur *userRepository) GetUserByUsername(ctx context.Context, username string
 	query := `SELECT * FROM user WHERE username = ?;`
 	row := ur.db.QueryRowContext(ctx, query, username)
 	var user model.User
-	err := row.Scan(&user.Id, &user.Username, &user.Email, &user.Password, &user.Salt, &user.PhoneNumber)
+	err := row.Scan(&user.Id, &user.Username, &user.Email, &user.Password, &user.Salt, &user.PhoneNumber, &user.RegistrationDate, &user.IsAccountConfirmed, &user.IsAccountDeleted)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -126,6 +123,27 @@ func (ur *userRepository) GetUserByUsername(ctx context.Context, username string
 			return nil, &repositoryError
 		}
 	}
-
 	return &user, nil
+}
+
+func (ur *userRepository) CreateAccountConfirmation(ctx context.Context, accountConfirmation model.AccountConfirmation) *apperror.AppError {
+	query := `
+		INSERT INTO account_confirmation (user_id, confirmation_code) 
+		VALUES (?, ?)
+	`
+	_, err := ur.tx.ExecContext(ctx, query, &accountConfirmation.UserId, &accountConfirmation.ConfirmationCode)
+
+	if err != nil {
+		args := fmt.Sprintf("accountConfirmation: %v", accountConfirmation)
+		repositoryError := apperror.AppError{
+			StatusCode:      500,
+			Message:         "Database error occurred while trying to create a account confirmation entry",
+			StructAndMethod: "userRepository.CreateAccountConfirmation()",
+			Argument:        &args,
+			ChildAppError:   nil,
+			ChildError:      &err,
+		}
+		return &repositoryError
+	}
+	return nil
 }

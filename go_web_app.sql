@@ -5,13 +5,12 @@ CREATE TABLE user (
     password BINARY(64) NOT NULL,
     salt BINARY(16) NOT NULL,
     phone_number VARCHAR(20) DEFAULT NULL,
-    registration_date DATE NOT NULL,
+    registration_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_account_confirmed BOOLEAN NOT NULL DEFAULT FALSE,
     is_account_deleted BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE account_confirmation (
-	id CHAR(36) NOT NULL PRIMARY KEY,
     user_id CHAR(36) NOT NULL,
     FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
     confirmation_code CHAR(36) UNIQUE NOT NULL
