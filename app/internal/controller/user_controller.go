@@ -32,7 +32,7 @@ func (uc *UserController) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	serviceError := uc.userService.CreateUser(ctx, newUser)
+	serviceError := uc.userService.RegisterUser(ctx, newUser)
 
 	if serviceError != nil {
 

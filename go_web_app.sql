@@ -4,7 +4,6 @@ CREATE TABLE user (
     email VARCHAR(255) NOT NULL UNIQUE,
     password BINARY(64) NOT NULL,
     salt BINARY(16) NOT NULL,
-    phone_number VARCHAR(20) DEFAULT NULL,
     registration_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_account_confirmed BOOLEAN NOT NULL DEFAULT FALSE,
     is_account_deleted BOOLEAN NOT NULL DEFAULT FALSE

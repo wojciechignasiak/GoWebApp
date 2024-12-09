@@ -35,10 +35,10 @@ func NewUserRepository(tx *sql.Tx, db *sql.DB) *userRepository {
 
 func (ur *userRepository) CreateUser(ctx context.Context, user model.User) *apperror.AppError {
 	query := `
-		INSERT INTO user (id, username, email, password, salt, phone_number)
+		INSERT INTO user (id, username, email, password, salt)
 		VALUES (?, ?, ?, ?, ?, ?);
 	`
-	_, err := ur.tx.ExecContext(ctx, query, user.Id, user.Username, user.Email, user.Password, user.Salt, user.PhoneNumber)
+	_, err := ur.tx.ExecContext(ctx, query, user.Id, user.Username, user.Email, user.Password, user.Salt)
 	if err != nil {
 		args := fmt.Sprintf("user: %v", user)
 		repositoryError := apperror.AppError{
@@ -58,7 +58,7 @@ func (ur *userRepository) GetUserById(ctx context.Context, id uuid.UUID) (*model
 	query := `SELECT * FROM user WHERE id = ?;`
 	row := ur.db.QueryRowContext(ctx, query, id)
 	var user model.User
-	err := row.Scan(&user.Id, &user.Username, &user.Email, &user.Password, &user.Salt, &user.PhoneNumber, &user.RegistrationDate, &user.IsAccountConfirmed, &user.IsAccountDeleted)
+	err := row.Scan(&user.Id, &user.Username, &user.Email, &user.Password, &user.Salt, &user.RegistrationDate, &user.IsAccountConfirmed, &user.IsAccountDeleted)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -82,7 +82,7 @@ func (ur *userRepository) GetUserByEmail(ctx context.Context, email string) (*mo
 	query := `SELECT * FROM user WHERE email = ?;`
 	row := ur.db.QueryRowContext(ctx, query, email)
 	var user model.User
-	err := row.Scan(&user.Id, &user.Username, &user.Email, &user.Password, &user.Salt, &user.PhoneNumber, &user.RegistrationDate, &user.IsAccountConfirmed, &user.IsAccountDeleted)
+	err := row.Scan(&user.Id, &user.Username, &user.Email, &user.Password, &user.Salt, &user.RegistrationDate, &user.IsAccountConfirmed, &user.IsAccountDeleted)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -106,7 +106,7 @@ func (ur *userRepository) GetUserByUsername(ctx context.Context, username string
 	query := `SELECT * FROM user WHERE username = ?;`
 	row := ur.db.QueryRowContext(ctx, query, username)
 	var user model.User
-	err := row.Scan(&user.Id, &user.Username, &user.Email, &user.Password, &user.Salt, &user.PhoneNumber, &user.RegistrationDate, &user.IsAccountConfirmed, &user.IsAccountDeleted)
+	err := row.Scan(&user.Id, &user.Username, &user.Email, &user.Password, &user.Salt, &user.RegistrationDate, &user.IsAccountConfirmed, &user.IsAccountDeleted)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
