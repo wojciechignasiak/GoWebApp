@@ -343,7 +343,7 @@ func (us *userService) validatePasswords(password, confirmPassword string) *appe
 }
 
 func (us *userService) checkisUsernameOrEmailDuplicate(ctx context.Context, username, email string) *apperror.AppError {
-	user, err := us.GetUserByUsername(ctx, username)
+	user, err := us.getUserByUsername(ctx, username)
 	if err != nil {
 		args := fmt.Sprintf("username: %s, email: %s", username, email)
 		serviceError := apperror.AppError{
@@ -369,7 +369,7 @@ func (us *userService) checkisUsernameOrEmailDuplicate(ctx context.Context, user
 		return &serviceError
 	}
 
-	user, err = us.GetUserByEmail(ctx, email)
+	user, err = us.getUserByEmail(ctx, email)
 	if err != nil {
 		args := fmt.Sprintf("username: %s, email: %s", username, email)
 		serviceError := apperror.AppError{
@@ -398,7 +398,7 @@ func (us *userService) checkisUsernameOrEmailDuplicate(ctx context.Context, user
 	return nil
 }
 
-func (us *userService) GetUserByEmail(ctx context.Context, email string) (*model.User, *apperror.AppError) {
+func (us *userService) getUserByEmail(ctx context.Context, email string) (*model.User, *apperror.AppError) {
 	uow, err := us.uowFactory()
 
 	if err != nil {
@@ -434,7 +434,7 @@ func (us *userService) GetUserByEmail(ctx context.Context, email string) (*model
 	return user, nil
 }
 
-func (us *userService) GetUserByUsername(ctx context.Context, username string) (*model.User, *apperror.AppError) {
+func (us *userService) getUserByUsername(ctx context.Context, username string) (*model.User, *apperror.AppError) {
 	uow, err := us.uowFactory()
 
 	if err != nil {

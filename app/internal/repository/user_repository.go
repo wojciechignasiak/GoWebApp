@@ -36,7 +36,7 @@ func NewUserRepository(tx *sql.Tx, db *sql.DB) *userRepository {
 func (ur *userRepository) CreateUser(ctx context.Context, user model.User) *apperror.AppError {
 	query := `
 		INSERT INTO user (id, username, email, password, salt)
-		VALUES (?, ?, ?, ?, ?, ?);
+		VALUES (?, ?, ?, ?, ?);
 	`
 	_, err := ur.tx.ExecContext(ctx, query, user.Id, user.Username, user.Email, user.Password, user.Salt)
 	if err != nil {
