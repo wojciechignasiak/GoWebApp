@@ -2,6 +2,7 @@ package main
 
 import (
 	"app/internal/controller"
+	controllercomponent "app/internal/controller_component"
 	"app/internal/database"
 	"app/internal/logs"
 	"app/internal/server"
@@ -24,14 +25,14 @@ func main() {
 		fmt.Println("Failed to initialize database: ", err)
 	}
 	commonTools := servicecomponent.NewCommonTools()
-
 	uowFactory := func() (database.UnitOfWork, error) {
 		return database.NewUnitOfWork(db), err
 	}
-
 	userService := service.NewUserService(uowFactory, commonTools)
+
 	logger := logs.NewLogger()
-	userController := controller.NewUserController(userService, logger)
+	responseHandler := controllercomponent.NewResponseHandler()
+	userController := controller.NewUserController(userService, responseHandler, logger)
 	server := server.NewServer(
 		"",
 		80,

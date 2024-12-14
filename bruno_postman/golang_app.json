@@ -1,0 +1,40 @@
+{
+  "name": "golang_app",
+  "version": "1",
+  "items": [
+    {
+      "type": "http",
+      "name": "register-user",
+      "seq": 2,
+      "request": {
+        "url": "http://localhost:8080/user/register",
+        "method": "POST",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "json",
+          "json": "{\n  \"username\": \"john_doe\",\n  \"email\": \"john.doe@example1.com\",\n  \"confirm_email\": \"john.doe@example1.com\",\n  \"password\": \"secure_password123\",\n  \"confirm_password\": \"secure_password123\"\n}\n",
+          "formUrlEncoded": [],
+          "multipartForm": []
+        },
+        "script": {},
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "auth": {
+          "mode": "none"
+        }
+      }
+    }
+  ],
+  "environments": [],
+  "brunoConfig": {
+    "version": "1",
+    "name": "golang_app",
+    "type": "collection",
+    "ignore": [
+      "node_modules",
+      ".git"
+    ]
+  }
+}

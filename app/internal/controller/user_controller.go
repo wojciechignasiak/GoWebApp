@@ -1,23 +1,28 @@
 package controller
 
 import (
+	controllercomponent "app/internal/controller_component"
 	"app/internal/logs"
 	"app/internal/model"
 	"app/internal/service"
 	"encoding/json"
-	"log"
 	"net/http"
+
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 type UserController struct {
-	logger      logs.Logger
-	userService service.UserService
+	userService     service.UserService
+	responseHandler controllercomponent.ResponseHandler
+	logger          logs.Logger
 }
 
-func NewUserController(userService service.UserService, logger logs.Logger) *UserController {
+func NewUserController(userService service.UserService, responseHandler controllercomponent.ResponseHandler, logger logs.Logger) *UserController {
 	return &UserController{
-		logger:      logger,
-		userService: userService,
+		userService:     userService,
+		responseHandler: responseHandler,
+		logger:          logger,
 	}
 }
 
@@ -35,30 +40,43 @@ func (uc *UserController) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	serviceError := uc.userService.RegisterUser(ctx, newUser)
 
 	if serviceError != nil {
-
-		switch serviceError.StatusCode {
-		case 400:
-			uc.logger.LogRequest(400, "/user/register")
-			http.Error(w, "message: "+serviceError.Message, http.StatusBadRequest)
-		case 409:
-			uc.logger.LogRequest(409, "/user/register")
-			http.Error(w, "message: "+serviceError.Message, http.StatusConflict)
-		case 500:
-			uc.logger.LogRequest(500, "/user/register")
+		uc.logger.LogRequest(serviceError.StatusCode, "/user/register")
+		if serviceError.StatusCode == http.StatusInternalServerError {
 			uc.logger.LogAppError(serviceError)
-			http.Error(w, "message: Internal Server Error", http.StatusInternalServerError)
 		}
+		uc.responseHandler.HandleError(w, serviceError)
+		return
+	}
+	uc.logger.LogRequest(http.StatusCreated, "/user/register")
+	uc.responseHandler.SendResponse(w, http.StatusCreated, "user registered successfully")
+}
+
+func (uc *UserController) ConfirmAccount(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	confirmationCode := vars["confirmationCode"]
+	securityCode := vars["securityCode"]
+	confirmationCodeUUID, err := uuid.Parse(confirmationCode)
+	if err != nil {
+		http.Error(w, "message: invalid confirmation code format", http.StatusBadRequest)
 		return
 	}
 
-	response := map[string]string{"message": "user registered successfully"}
-	jsonResponse, err := json.Marshal(response)
-	if err != nil {
-		log.Fatalf("Error marshaling JSON: %v", err)
+	ctx := r.Context()
+	confirmAccount := model.ConfirmAccount{
+		ConfirmationCode: confirmationCodeUUID,
+		SecurityCode:     securityCode,
+	}
+	serviceError := uc.userService.ConfirmAccount(ctx, confirmAccount)
+
+	if serviceError != nil {
+		uc.logger.LogRequest(serviceError.StatusCode, "/user/confirm-account")
+		if serviceError.StatusCode == http.StatusInternalServerError {
+			uc.logger.LogAppError(serviceError)
+		}
+		uc.responseHandler.HandleError(w, serviceError)
+		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	w.Write(jsonResponse)
-	uc.logger.LogRequest(200, "/user/register")
+	uc.logger.LogRequest(http.StatusOK, "/user/confirm-account")
+	uc.responseHandler.SendResponse(w, http.StatusOK, "account confirmed successfully")
 }

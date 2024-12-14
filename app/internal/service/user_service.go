@@ -15,6 +15,7 @@ import (
 
 type UserService interface {
 	RegisterUser(ctx context.Context, newUser model.CreateUser) *apperror.AppError
+	ConfirmAccount(ctx context.Context, confirmAccount model.ConfirmAccount) *apperror.AppError
 }
 
 type userService struct {
@@ -80,7 +81,6 @@ func (us *userService) RegisterUser(ctx context.Context, newUser model.CreateUse
 
 	uowError := uow.BeginTransaction()
 	if uowError != nil {
-		uow.Rollback()
 		newUser.Password = "anonimized"
 		newUser.ConfirmPassword = "anonimized"
 		args := fmt.Sprintf("newUser: %v", newUser)
@@ -484,9 +484,12 @@ func (us *userService) createAccountConfirmation(ctx context.Context, uow databa
 		}
 		return &serviceError
 	}
+
+	securityCode := us.ct.Generate6DigitCode()
 	accountConfirmation := model.AccountConfirmation{
 		UserId:           userId,
 		ConfirmationCode: *accountConfirmationUuid,
+		SecurityCode:     securityCode,
 	}
 
 	repositoryError := uow.UserRepository().CreateAccountConfirmation(ctx, accountConfirmation)
@@ -503,5 +506,221 @@ func (us *userService) createAccountConfirmation(ctx context.Context, uow databa
 		return &serviceError
 	}
 
+	return nil
+}
+
+func (us *userService) ConfirmAccount(ctx context.Context, confirmAccount model.ConfirmAccount) *apperror.AppError {
+
+	accountConfirmation, getAccountConfirmationError := us.getAccountConfirmationByConfirmationCode(ctx, confirmAccount.ConfirmationCode)
+	if getAccountConfirmationError != nil {
+		args := fmt.Sprintf("confirmAccount: %v", confirmAccount)
+		serviceError := apperror.AppError{
+			StatusCode:      getAccountConfirmationError.StatusCode,
+			Message:         getAccountConfirmationError.Message,
+			StructAndMethod: "userService.ConfirmAccount()",
+			Argument:        &args,
+			ChildAppError:   getAccountConfirmationError,
+			ChildError:      getAccountConfirmationError.ChildError,
+		}
+		return &serviceError
+	}
+	if accountConfirmation == nil {
+		args := fmt.Sprintf("confirmAccount: %v", confirmAccount)
+		serviceError := apperror.AppError{
+			StatusCode:      404,
+			Message:         "content not found",
+			StructAndMethod: "userService.ConfirmAccount()",
+			Argument:        &args,
+			ChildAppError:   nil,
+			ChildError:      nil,
+		}
+		return &serviceError
+	}
+
+	if confirmAccount.SecurityCode != accountConfirmation.SecurityCode {
+		args := fmt.Sprintf("confirmAccount: %v", confirmAccount)
+		serviceError := apperror.AppError{
+			StatusCode:      404,
+			Message:         "content not found",
+			StructAndMethod: "userService.ConfirmAccount()",
+			Argument:        &args,
+			ChildAppError:   nil,
+			ChildError:      nil,
+		}
+		return &serviceError
+	}
+
+	user, getUserError := us.getUserById(ctx, accountConfirmation.UserId)
+	if getUserError != nil {
+		args := fmt.Sprintf("confirmAccount: %v", confirmAccount)
+		serviceError := apperror.AppError{
+			StatusCode:      getUserError.StatusCode,
+			Message:         getUserError.Message,
+			StructAndMethod: "userService.ConfirmAccount()",
+			Argument:        &args,
+			ChildAppError:   getUserError,
+			ChildError:      getUserError.ChildError,
+		}
+		return &serviceError
+	}
+
+	if user.IsAccountDeleted {
+		args := fmt.Sprintf("confirmAccount: %v", confirmAccount)
+		serviceError := apperror.AppError{
+			StatusCode:      404,
+			Message:         "content not found",
+			StructAndMethod: "userService.ConfirmAccount()",
+			Argument:        &args,
+			ChildAppError:   nil,
+			ChildError:      nil,
+		}
+		return &serviceError
+	}
+
+	if user.IsAccountConfirmed {
+		args := fmt.Sprintf("confirmAccount: %v", confirmAccount)
+		serviceError := apperror.AppError{
+			StatusCode:      200,
+			Message:         "account already confirmed",
+			StructAndMethod: "userService.ConfirmAccount()",
+			Argument:        &args,
+			ChildAppError:   nil,
+			ChildError:      nil,
+		}
+		return &serviceError
+	}
+
+	uow, err := us.uowFactory()
+	if err != nil {
+		args := fmt.Sprintf("confirmAccount: %v", confirmAccount)
+		serviceError := apperror.AppError{
+			StatusCode:      500,
+			Message:         "error occured while creating unit of work in user service",
+			StructAndMethod: "userService.ConfirmAccount()",
+			Argument:        &args,
+			ChildAppError:   nil,
+			ChildError:      &err,
+		}
+		return &serviceError
+	}
+
+	uowError := uow.BeginTransaction()
+	if uowError != nil {
+		args := fmt.Sprintf("confirmAccount: %v", confirmAccount)
+		serviceError := apperror.AppError{
+			StatusCode:      uowError.StatusCode,
+			Message:         uowError.Message,
+			StructAndMethod: "userService.ConfirmAccount()",
+			Argument:        &args,
+			ChildAppError:   uowError,
+			ChildError:      uowError.ChildError,
+		}
+		return &serviceError
+	}
+
+	confirmUserAccountError := us.setUserIsConfirmedStatusToTrue(ctx, uow, user.Id)
+	if confirmUserAccountError != nil {
+		uow.Rollback()
+		args := fmt.Sprintf("confirmAccount: %v", confirmAccount)
+		serviceError := apperror.AppError{
+			StatusCode:      confirmUserAccountError.StatusCode,
+			Message:         confirmUserAccountError.Message,
+			StructAndMethod: "userService.ConfirmAccount()",
+			Argument:        &args,
+			ChildAppError:   uowError,
+			ChildError:      confirmUserAccountError.ChildError,
+		}
+		return &serviceError
+	}
+
+	uow.Commit()
+	return nil
+}
+
+func (us *userService) getAccountConfirmationByConfirmationCode(ctx context.Context, confirmationCode uuid.UUID) (*model.AccountConfirmation, *apperror.AppError) {
+
+	uow, err := us.uowFactory()
+
+	if err != nil {
+		args := fmt.Sprintf("confirmationCode: %s", confirmationCode)
+		serviceError := apperror.AppError{
+			StatusCode:      500,
+			Message:         "error occured while creating unit of work in user service",
+			StructAndMethod: "userService.getAccountConfirmationByConfirmationCode()",
+			Argument:        &args,
+			ChildAppError:   nil,
+			ChildError:      &err,
+		}
+		return nil, &serviceError
+	}
+
+	accountConfirmation, repositoryError := uow.UserRepository().GetAccountConfirmationByConfirmationCode(ctx, confirmationCode)
+	if repositoryError != nil {
+		args := fmt.Sprintf("confirmationCode: %v", confirmationCode)
+		serviceError := apperror.AppError{
+			StatusCode:      repositoryError.StatusCode,
+			Message:         repositoryError.Message,
+			StructAndMethod: "userService.getAccountConfirmationByConfirmationCode()",
+			Argument:        &args,
+			ChildAppError:   repositoryError,
+			ChildError:      repositoryError.ChildError,
+		}
+
+		return nil, &serviceError
+	}
+
+	return accountConfirmation, nil
+}
+
+func (us *userService) getUserById(ctx context.Context, userId uuid.UUID) (*model.User, *apperror.AppError) {
+	uow, err := us.uowFactory()
+
+	if err != nil {
+		args := fmt.Sprintf("userId: %s", userId)
+		serviceError := apperror.AppError{
+			StatusCode:      500,
+			Message:         "Error occured while creating unit of work in user service",
+			StructAndMethod: "userService.getUserById()",
+			Argument:        &args,
+			ChildAppError:   nil,
+			ChildError:      &err,
+		}
+
+		return nil, &serviceError
+	}
+
+	user, repositoryError := uow.UserRepository().GetUserById(ctx, userId)
+
+	if repositoryError != nil {
+		args := fmt.Sprintf("userId: %v", userId)
+		serviceError := apperror.AppError{
+			StatusCode:      repositoryError.StatusCode,
+			Message:         repositoryError.Message,
+			StructAndMethod: "userService.GetUserById()",
+			Argument:        &args,
+			ChildAppError:   repositoryError,
+			ChildError:      repositoryError.ChildError,
+		}
+
+		return nil, &serviceError
+	}
+
+	return user, nil
+}
+
+func (us *userService) setUserIsConfirmedStatusToTrue(ctx context.Context, uow database.UnitOfWork, userId uuid.UUID) *apperror.AppError {
+	repositoryError := uow.UserRepository().ConfirmUserAccount(ctx, userId)
+	if repositoryError != nil {
+		args := fmt.Sprintf("userId: %v", userId)
+		serviceError := apperror.AppError{
+			StatusCode:      repositoryError.StatusCode,
+			Message:         repositoryError.Message,
+			StructAndMethod: "userService.setUserIsConfirmedStatusToTrue()",
+			Argument:        &args,
+			ChildAppError:   repositoryError,
+			ChildError:      repositoryError.ChildError,
+		}
+		return &serviceError
+	}
 	return nil
 }

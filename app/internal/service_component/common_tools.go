@@ -4,6 +4,7 @@ import (
 	apperror "app/internal/app_error"
 	"crypto/rand"
 	"fmt"
+	mathrand "math/rand"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/argon2"
@@ -13,6 +14,7 @@ type CommonTools interface {
 	GenerateUUID() (*uuid.UUID, *apperror.AppError)
 	GenerateSalt(length int) (*[]byte, *apperror.AppError)
 	HashPassword(password string, salt []byte) []byte
+	Generate6DigitCode() string
 }
 
 type commonTools struct{}
@@ -64,4 +66,8 @@ func (ct *commonTools) HashPassword(password string, salt []byte) []byte {
 	hash := argon2.IDKey([]byte(password), salt, timeCost, memoryCost, threads, keyLength)
 
 	return hash
+}
+
+func (ct *commonTools) Generate6DigitCode() string {
+	return fmt.Sprintf("%06d", mathrand.Intn(1000000))
 }

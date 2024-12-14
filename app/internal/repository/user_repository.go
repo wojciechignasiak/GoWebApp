@@ -16,6 +16,8 @@ type UserRepository interface {
 	GetUserByEmail(ctx context.Context, email string) (*model.User, *apperror.AppError)
 	GetUserByUsername(ctx context.Context, username string) (*model.User, *apperror.AppError)
 	CreateAccountConfirmation(ctx context.Context, accountConfirmation model.AccountConfirmation) *apperror.AppError
+	GetAccountConfirmationByConfirmationCode(ctx context.Context, confirmationCode uuid.UUID) (*model.AccountConfirmation, *apperror.AppError)
+	ConfirmUserAccount(ctx context.Context, userId uuid.UUID) *apperror.AppError
 }
 
 type userRepository struct {
@@ -128,10 +130,10 @@ func (ur *userRepository) GetUserByUsername(ctx context.Context, username string
 
 func (ur *userRepository) CreateAccountConfirmation(ctx context.Context, accountConfirmation model.AccountConfirmation) *apperror.AppError {
 	query := `
-		INSERT INTO account_confirmation (user_id, confirmation_code) 
-		VALUES (?, ?)
+		INSERT INTO account_confirmation (user_id, confirmation_code, security_code) 
+		VALUES (?, ?, ?)
 	`
-	_, err := ur.tx.ExecContext(ctx, query, &accountConfirmation.UserId, &accountConfirmation.ConfirmationCode)
+	_, err := ur.tx.ExecContext(ctx, query, &accountConfirmation.UserId, &accountConfirmation.ConfirmationCode, &accountConfirmation.SecurityCode)
 
 	if err != nil {
 		args := fmt.Sprintf("accountConfirmation: %v", accountConfirmation)
@@ -139,6 +141,52 @@ func (ur *userRepository) CreateAccountConfirmation(ctx context.Context, account
 			StatusCode:      500,
 			Message:         "Database error occurred while trying to create a account confirmation entry",
 			StructAndMethod: "userRepository.CreateAccountConfirmation()",
+			Argument:        &args,
+			ChildAppError:   nil,
+			ChildError:      &err,
+		}
+		return &repositoryError
+	}
+	return nil
+}
+
+func (ur *userRepository) GetAccountConfirmationByConfirmationCode(ctx context.Context, confirmationCode uuid.UUID) (*model.AccountConfirmation, *apperror.AppError) {
+	query := `SELECT * FROM account_confirmation WHERE confirmation_code = ?;`
+	row := ur.db.QueryRowContext(ctx, query, confirmationCode)
+	var accountConfirmation model.AccountConfirmation
+	err := row.Scan(&accountConfirmation.UserId, &accountConfirmation.ConfirmationCode, &accountConfirmation.SecurityCode)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		} else {
+			args := fmt.Sprintf("confirmationCode: %s", confirmationCode)
+			repositoryError := apperror.AppError{
+				StatusCode:      500,
+				Message:         "Database error occurred while trying to get account confirmation by confirmation code",
+				StructAndMethod: "userRepository.GetAccountConfirmationByConfirmationCode()",
+				Argument:        &args,
+				ChildAppError:   nil,
+				ChildError:      &err,
+			}
+			return nil, &repositoryError
+		}
+	}
+	return &accountConfirmation, nil
+}
+
+func (ur *userRepository) ConfirmUserAccount(ctx context.Context, userId uuid.UUID) *apperror.AppError {
+	query := `
+		UPDATE user
+		SET is_account_confirmed = ?
+		WHERE id = ?;
+	`
+	_, err := ur.tx.ExecContext(ctx, query, true, userId)
+	if err != nil {
+		args := fmt.Sprintf("userId: %v", userId)
+		repositoryError := apperror.AppError{
+			StatusCode:      500,
+			Message:         "Database error occurred while trying to confirm user account",
+			StructAndMethod: "userRepository.ConfirmUserAccount()",
 			Argument:        &args,
 			ChildAppError:   nil,
 			ChildError:      &err,
