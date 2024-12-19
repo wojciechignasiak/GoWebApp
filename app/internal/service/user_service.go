@@ -39,7 +39,7 @@ func (us *userService) RegisterUser(ctx context.Context, newUser model.CreateUse
 		serviceError := apperror.AppError{
 			StatusCode:      validationError.StatusCode,
 			Message:         validationError.Message,
-			StructAndMethod: "userService.CreateUser()",
+			StructAndMethod: "UserService.RegisterUser()",
 			Argument:        &args,
 			ChildAppError:   validationError,
 			ChildError:      validationError.ChildError,
@@ -55,7 +55,7 @@ func (us *userService) RegisterUser(ctx context.Context, newUser model.CreateUse
 		serviceError := apperror.AppError{
 			StatusCode:      500,
 			Message:         "error occured while creating unit of work in user service",
-			StructAndMethod: "userService.CreateUser()",
+			StructAndMethod: "UserService.RegisterUser()",
 			Argument:        &args,
 			ChildAppError:   nil,
 			ChildError:      &err,
@@ -71,7 +71,7 @@ func (us *userService) RegisterUser(ctx context.Context, newUser model.CreateUse
 		serviceError := apperror.AppError{
 			StatusCode:      duplicateError.StatusCode,
 			Message:         duplicateError.Message,
-			StructAndMethod: "userService.CreateUser()",
+			StructAndMethod: "UserService.RegisterUser()",
 			Argument:        &args,
 			ChildAppError:   duplicateError,
 			ChildError:      duplicateError.ChildError,
@@ -87,7 +87,7 @@ func (us *userService) RegisterUser(ctx context.Context, newUser model.CreateUse
 		serviceError := apperror.AppError{
 			StatusCode:      uowError.StatusCode,
 			Message:         uowError.Message,
-			StructAndMethod: "userService.CreateUser()",
+			StructAndMethod: "UserService.RegisterUser()",
 			Argument:        &args,
 			ChildAppError:   uowError,
 			ChildError:      uowError.ChildError,
@@ -104,7 +104,7 @@ func (us *userService) RegisterUser(ctx context.Context, newUser model.CreateUse
 		serviceError := apperror.AppError{
 			StatusCode:      createUserError.StatusCode,
 			Message:         createUserError.Message,
-			StructAndMethod: "userService.RegisterUser()",
+			StructAndMethod: "UserService.RegisterUser()",
 			Argument:        &args,
 			ChildAppError:   createUserError,
 			ChildError:      createUserError.ChildError,
@@ -121,7 +121,7 @@ func (us *userService) RegisterUser(ctx context.Context, newUser model.CreateUse
 		serviceError := apperror.AppError{
 			StatusCode:      accountConfirmationError.StatusCode,
 			Message:         accountConfirmationError.Message,
-			StructAndMethod: "userService.RegisterUser()",
+			StructAndMethod: "UserService.RegisterUser()",
 			Argument:        &args,
 			ChildAppError:   accountConfirmationError,
 			ChildError:      accountConfirmationError.ChildError,
@@ -143,7 +143,7 @@ func (us *userService) createUser(ctx context.Context, uow database.UnitOfWork, 
 		serviceError := apperror.AppError{
 			StatusCode:      generationError.StatusCode,
 			Message:         generationError.Message,
-			StructAndMethod: "userService.CreateUser()",
+			StructAndMethod: "UserService.createUser()",
 			Argument:        &args,
 			ChildAppError:   generationError,
 			ChildError:      generationError.ChildError,
@@ -159,7 +159,7 @@ func (us *userService) createUser(ctx context.Context, uow database.UnitOfWork, 
 		serviceError := apperror.AppError{
 			StatusCode:      generationError.StatusCode,
 			Message:         generationError.Message,
-			StructAndMethod: "userService.CreateUser()",
+			StructAndMethod: "UserService.createUser()",
 			Argument:        &args,
 			ChildAppError:   generationError,
 			ChildError:      generationError.ChildError,
@@ -186,7 +186,7 @@ func (us *userService) createUser(ctx context.Context, uow database.UnitOfWork, 
 		serviceError := apperror.AppError{
 			StatusCode:      repositoryError.StatusCode,
 			Message:         repositoryError.Message,
-			StructAndMethod: "userService.CreateUser()",
+			StructAndMethod: "UserService.createUser()",
 			Argument:        &args,
 			ChildAppError:   repositoryError,
 			ChildError:      repositoryError.ChildError,
@@ -204,7 +204,7 @@ func (us *userService) validateNewUserData(newUser model.CreateUser) *apperror.A
 		serviceError := apperror.AppError{
 			StatusCode:      err.StatusCode,
 			Message:         err.Message,
-			StructAndMethod: "userService.validateNewUserData()",
+			StructAndMethod: "UserService.validateNewUserData()",
 			Argument:        &args,
 			ChildAppError:   err,
 			ChildError:      err.ChildError,
@@ -217,7 +217,7 @@ func (us *userService) validateNewUserData(newUser model.CreateUser) *apperror.A
 		serviceError := apperror.AppError{
 			StatusCode:      err.StatusCode,
 			Message:         err.Message,
-			StructAndMethod: "userService.validateNewUserData()",
+			StructAndMethod: "UserService.validateNewUserData()",
 			Argument:        &args,
 			ChildAppError:   err,
 			ChildError:      err.ChildError,
@@ -230,7 +230,7 @@ func (us *userService) validateNewUserData(newUser model.CreateUser) *apperror.A
 		serviceError := apperror.AppError{
 			StatusCode:      err.StatusCode,
 			Message:         err.Message,
-			StructAndMethod: "userService.validateNewUserData()",
+			StructAndMethod: "UserService.validateNewUserData()",
 			Argument:        &args,
 			ChildAppError:   err,
 			ChildError:      err.ChildError,
@@ -247,7 +247,7 @@ func (us *userService) validateUsername(username string) *apperror.AppError {
 		validationError := apperror.AppError{
 			StatusCode:      400,
 			Message:         "Username must contain between 5 and 20 characters",
-			StructAndMethod: "CreateUser.validateUsername()",
+			StructAndMethod: "UserService.validateUsername()",
 			Argument:        &args,
 			ChildAppError:   nil,
 			ChildError:      nil,
@@ -258,12 +258,12 @@ func (us *userService) validateUsername(username string) *apperror.AppError {
 }
 
 func (us *userService) validateEmails(email, confirmEmail string) *apperror.AppError {
-	if email != confirmEmail {
-		args := fmt.Sprintf("confirmEmail: %s", confirmEmail)
+	if !us.areEmailsTheSame(email, confirmEmail) {
+		args := fmt.Sprintf("email: %s, confirmEmail: %s", email, confirmEmail)
 		validationError := apperror.AppError{
 			StatusCode:      400,
 			Message:         "Provided emails do not match",
-			StructAndMethod: "CreateUser.validateEmails()",
+			StructAndMethod: "UserService.validateEmails()",
 			Argument:        &args,
 			ChildAppError:   nil,
 			ChildError:      nil,
@@ -271,11 +271,11 @@ func (us *userService) validateEmails(email, confirmEmail string) *apperror.AppE
 		return &validationError
 	}
 	if !us.isValidEmail(email) {
-		args := fmt.Sprintf("confirmEmail: %s", confirmEmail)
+		args := fmt.Sprintf("email: %s, confirmEmail: %s", email, confirmEmail)
 		validationError := apperror.AppError{
 			StatusCode:      400,
 			Message:         "Invalid email format",
-			StructAndMethod: "CreateUser.validateEmails()",
+			StructAndMethod: "UserService.validateEmails()",
 			Argument:        &args,
 			ChildAppError:   nil,
 			ChildError:      nil,
@@ -285,13 +285,20 @@ func (us *userService) validateEmails(email, confirmEmail string) *apperror.AppE
 	return nil
 }
 
+func (us *userService) areEmailsTheSame(email, confirmEmail string) bool {
+	if email != confirmEmail {
+		return false
+	}
+	return true
+}
+
 func (us *userService) isValidEmail(email string) bool {
 	re := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 	return re.MatchString(email)
 }
 
 func (us *userService) validatePasswords(password, confirmPassword string) *apperror.AppError {
-	if password != confirmPassword {
+	if !us.arePasswordsTheSame(password, confirmPassword) {
 		validationError := apperror.AppError{
 			StatusCode:      400,
 			Message:         "Provided passwords are not the same",
@@ -303,7 +310,7 @@ func (us *userService) validatePasswords(password, confirmPassword string) *appe
 		return &validationError
 
 	}
-	if len(password) < 8 {
+	if !us.isPasswordLongEnough(password) {
 		validationError := apperror.AppError{
 			StatusCode:      400,
 			Message:         "Password must contain at least 8 characters",
@@ -315,19 +322,7 @@ func (us *userService) validatePasswords(password, confirmPassword string) *appe
 		return &validationError
 	}
 
-	var hasDigit, hasSpecial bool
-	for _, char := range password {
-		if unicode.IsDigit(char) {
-			hasDigit = true
-		} else if unicode.IsPunct(char) || unicode.IsSymbol(char) {
-			hasSpecial = true
-		}
-		if hasDigit && hasSpecial {
-			break
-		}
-	}
-
-	if !hasDigit || !hasSpecial {
+	if !us.doesPasswordContainsSpecialCharacters(password) {
 		validationError := apperror.AppError{
 			StatusCode:      403,
 			Message:         "Password must contain at least one digit and one special character",
@@ -342,6 +337,38 @@ func (us *userService) validatePasswords(password, confirmPassword string) *appe
 	return nil
 }
 
+func (us *userService) arePasswordsTheSame(password, confirmPassword string) bool {
+	if password != confirmPassword {
+		return false
+	}
+	return true
+}
+
+func (us *userService) isPasswordLongEnough(password string) bool {
+	if len(password) < 8 {
+		return false
+	}
+	return true
+}
+
+func (us *userService) doesPasswordContainsSpecialCharacters(password string) bool {
+	var hasDigit, hasSpecial bool
+	for _, char := range password {
+		if unicode.IsDigit(char) {
+			hasDigit = true
+		} else if unicode.IsPunct(char) || unicode.IsSymbol(char) {
+			hasSpecial = true
+		}
+		if hasDigit && hasSpecial {
+			break
+		}
+	}
+	if !hasDigit || !hasSpecial {
+		return false
+	}
+	return true
+}
+
 func (us *userService) checkisUsernameOrEmailDuplicate(ctx context.Context, username, email string) *apperror.AppError {
 	user, err := us.getUserByUsername(ctx, username)
 	if err != nil {
@@ -349,7 +376,7 @@ func (us *userService) checkisUsernameOrEmailDuplicate(ctx context.Context, user
 		serviceError := apperror.AppError{
 			StatusCode:      err.StatusCode,
 			Message:         err.Message,
-			StructAndMethod: "userService.checkisUsernameOrEmailDuplicate()",
+			StructAndMethod: "UserService.checkisUsernameOrEmailDuplicate()",
 			Argument:        &args,
 			ChildAppError:   err,
 			ChildError:      err.ChildError,
@@ -361,7 +388,7 @@ func (us *userService) checkisUsernameOrEmailDuplicate(ctx context.Context, user
 		serviceError := apperror.AppError{
 			StatusCode:      409,
 			Message:         "username already in use",
-			StructAndMethod: "userService.checkisUsernameOrEmailDuplicate()",
+			StructAndMethod: "UserService.checkisUsernameOrEmailDuplicate()",
 			Argument:        &args,
 			ChildAppError:   nil,
 			ChildError:      nil,
@@ -375,7 +402,7 @@ func (us *userService) checkisUsernameOrEmailDuplicate(ctx context.Context, user
 		serviceError := apperror.AppError{
 			StatusCode:      err.StatusCode,
 			Message:         err.Message,
-			StructAndMethod: "userService.checkisUsernameOrEmailDuplicate()",
+			StructAndMethod: "UserService.checkisUsernameOrEmailDuplicate()",
 			Argument:        &args,
 			ChildAppError:   err,
 			ChildError:      err.ChildError,
@@ -387,7 +414,7 @@ func (us *userService) checkisUsernameOrEmailDuplicate(ctx context.Context, user
 		serviceError := apperror.AppError{
 			StatusCode:      409,
 			Message:         "email already in use",
-			StructAndMethod: "userService.checkisUsernameOrEmailDuplicate()",
+			StructAndMethod: "UserService.checkisUsernameOrEmailDuplicate()",
 			Argument:        &args,
 			ChildAppError:   nil,
 			ChildError:      nil,
@@ -406,7 +433,7 @@ func (us *userService) getUserByEmail(ctx context.Context, email string) (*model
 		serviceError := apperror.AppError{
 			StatusCode:      500,
 			Message:         "Error occured while creating unit of work in user service",
-			StructAndMethod: "userService.GetUserByEmail()",
+			StructAndMethod: "UserService.GetUserByEmail()",
 			Argument:        &args,
 			ChildAppError:   nil,
 			ChildError:      &err,
@@ -422,7 +449,7 @@ func (us *userService) getUserByEmail(ctx context.Context, email string) (*model
 		serviceError := apperror.AppError{
 			StatusCode:      repositoryError.StatusCode,
 			Message:         repositoryError.Message,
-			StructAndMethod: "userService.GetUserByEmail()",
+			StructAndMethod: "UserService.GetUserByEmail()",
 			Argument:        &args,
 			ChildAppError:   repositoryError,
 			ChildError:      repositoryError.ChildError,
@@ -442,7 +469,7 @@ func (us *userService) getUserByUsername(ctx context.Context, username string) (
 		serviceError := apperror.AppError{
 			StatusCode:      500,
 			Message:         "Error occured while creating unit of work in user service",
-			StructAndMethod: "userService.GetUserByUsername()",
+			StructAndMethod: "UserService.GetUserByUsername()",
 			Argument:        &args,
 			ChildAppError:   nil,
 			ChildError:      &err,
@@ -458,7 +485,7 @@ func (us *userService) getUserByUsername(ctx context.Context, username string) (
 		serviceError := apperror.AppError{
 			StatusCode:      repositoryError.StatusCode,
 			Message:         repositoryError.Message,
-			StructAndMethod: "userService.GetUserByUsername()",
+			StructAndMethod: "UserService.GetUserByUsername()",
 			Argument:        &args,
 			ChildAppError:   repositoryError,
 			ChildError:      repositoryError.ChildError,
@@ -477,7 +504,7 @@ func (us *userService) createAccountConfirmation(ctx context.Context, uow databa
 		serviceError := apperror.AppError{
 			StatusCode:      generationError.StatusCode,
 			Message:         generationError.Message,
-			StructAndMethod: "userService.createAccountConfirmation()",
+			StructAndMethod: "UserService.createAccountConfirmation()",
 			Argument:        &args,
 			ChildAppError:   generationError,
 			ChildError:      generationError.ChildError,
@@ -498,7 +525,7 @@ func (us *userService) createAccountConfirmation(ctx context.Context, uow databa
 		serviceError := apperror.AppError{
 			StatusCode:      repositoryError.StatusCode,
 			Message:         repositoryError.Message,
-			StructAndMethod: "userService.createAccountConfirmation()",
+			StructAndMethod: "UserService.createAccountConfirmation()",
 			Argument:        &args,
 			ChildAppError:   repositoryError,
 			ChildError:      repositoryError.ChildError,
@@ -517,7 +544,7 @@ func (us *userService) ConfirmAccount(ctx context.Context, confirmAccount model.
 		serviceError := apperror.AppError{
 			StatusCode:      getAccountConfirmationError.StatusCode,
 			Message:         getAccountConfirmationError.Message,
-			StructAndMethod: "userService.ConfirmAccount()",
+			StructAndMethod: "UserService.ConfirmAccount()",
 			Argument:        &args,
 			ChildAppError:   getAccountConfirmationError,
 			ChildError:      getAccountConfirmationError.ChildError,
@@ -529,7 +556,7 @@ func (us *userService) ConfirmAccount(ctx context.Context, confirmAccount model.
 		serviceError := apperror.AppError{
 			StatusCode:      404,
 			Message:         "content not found",
-			StructAndMethod: "userService.ConfirmAccount()",
+			StructAndMethod: "UserService.ConfirmAccount()",
 			Argument:        &args,
 			ChildAppError:   nil,
 			ChildError:      nil,
@@ -542,7 +569,7 @@ func (us *userService) ConfirmAccount(ctx context.Context, confirmAccount model.
 		serviceError := apperror.AppError{
 			StatusCode:      404,
 			Message:         "content not found",
-			StructAndMethod: "userService.ConfirmAccount()",
+			StructAndMethod: "UserService.ConfirmAccount()",
 			Argument:        &args,
 			ChildAppError:   nil,
 			ChildError:      nil,
@@ -556,7 +583,7 @@ func (us *userService) ConfirmAccount(ctx context.Context, confirmAccount model.
 		serviceError := apperror.AppError{
 			StatusCode:      getUserError.StatusCode,
 			Message:         getUserError.Message,
-			StructAndMethod: "userService.ConfirmAccount()",
+			StructAndMethod: "UserService.ConfirmAccount()",
 			Argument:        &args,
 			ChildAppError:   getUserError,
 			ChildError:      getUserError.ChildError,
@@ -569,7 +596,7 @@ func (us *userService) ConfirmAccount(ctx context.Context, confirmAccount model.
 		serviceError := apperror.AppError{
 			StatusCode:      404,
 			Message:         "content not found",
-			StructAndMethod: "userService.ConfirmAccount()",
+			StructAndMethod: "UserService.ConfirmAccount()",
 			Argument:        &args,
 			ChildAppError:   nil,
 			ChildError:      nil,
@@ -582,7 +609,7 @@ func (us *userService) ConfirmAccount(ctx context.Context, confirmAccount model.
 		serviceError := apperror.AppError{
 			StatusCode:      200,
 			Message:         "account already confirmed",
-			StructAndMethod: "userService.ConfirmAccount()",
+			StructAndMethod: "UserService.ConfirmAccount()",
 			Argument:        &args,
 			ChildAppError:   nil,
 			ChildError:      nil,
@@ -596,7 +623,7 @@ func (us *userService) ConfirmAccount(ctx context.Context, confirmAccount model.
 		serviceError := apperror.AppError{
 			StatusCode:      500,
 			Message:         "error occured while creating unit of work in user service",
-			StructAndMethod: "userService.ConfirmAccount()",
+			StructAndMethod: "UserService.ConfirmAccount()",
 			Argument:        &args,
 			ChildAppError:   nil,
 			ChildError:      &err,
@@ -610,7 +637,7 @@ func (us *userService) ConfirmAccount(ctx context.Context, confirmAccount model.
 		serviceError := apperror.AppError{
 			StatusCode:      uowError.StatusCode,
 			Message:         uowError.Message,
-			StructAndMethod: "userService.ConfirmAccount()",
+			StructAndMethod: "UserService.ConfirmAccount()",
 			Argument:        &args,
 			ChildAppError:   uowError,
 			ChildError:      uowError.ChildError,
@@ -625,7 +652,7 @@ func (us *userService) ConfirmAccount(ctx context.Context, confirmAccount model.
 		serviceError := apperror.AppError{
 			StatusCode:      confirmUserAccountError.StatusCode,
 			Message:         confirmUserAccountError.Message,
-			StructAndMethod: "userService.ConfirmAccount()",
+			StructAndMethod: "UserService.ConfirmAccount()",
 			Argument:        &args,
 			ChildAppError:   uowError,
 			ChildError:      confirmUserAccountError.ChildError,
@@ -646,7 +673,7 @@ func (us *userService) getAccountConfirmationByConfirmationCode(ctx context.Cont
 		serviceError := apperror.AppError{
 			StatusCode:      500,
 			Message:         "error occured while creating unit of work in user service",
-			StructAndMethod: "userService.getAccountConfirmationByConfirmationCode()",
+			StructAndMethod: "UserService.getAccountConfirmationByConfirmationCode()",
 			Argument:        &args,
 			ChildAppError:   nil,
 			ChildError:      &err,
@@ -660,7 +687,7 @@ func (us *userService) getAccountConfirmationByConfirmationCode(ctx context.Cont
 		serviceError := apperror.AppError{
 			StatusCode:      repositoryError.StatusCode,
 			Message:         repositoryError.Message,
-			StructAndMethod: "userService.getAccountConfirmationByConfirmationCode()",
+			StructAndMethod: "UserService.getAccountConfirmationByConfirmationCode()",
 			Argument:        &args,
 			ChildAppError:   repositoryError,
 			ChildError:      repositoryError.ChildError,
@@ -680,7 +707,7 @@ func (us *userService) getUserById(ctx context.Context, userId uuid.UUID) (*mode
 		serviceError := apperror.AppError{
 			StatusCode:      500,
 			Message:         "Error occured while creating unit of work in user service",
-			StructAndMethod: "userService.getUserById()",
+			StructAndMethod: "UserService.getUserById()",
 			Argument:        &args,
 			ChildAppError:   nil,
 			ChildError:      &err,
@@ -696,7 +723,7 @@ func (us *userService) getUserById(ctx context.Context, userId uuid.UUID) (*mode
 		serviceError := apperror.AppError{
 			StatusCode:      repositoryError.StatusCode,
 			Message:         repositoryError.Message,
-			StructAndMethod: "userService.GetUserById()",
+			StructAndMethod: "UserService.GetUserById()",
 			Argument:        &args,
 			ChildAppError:   repositoryError,
 			ChildError:      repositoryError.ChildError,
@@ -715,7 +742,7 @@ func (us *userService) setUserIsConfirmedStatusToTrue(ctx context.Context, uow d
 		serviceError := apperror.AppError{
 			StatusCode:      repositoryError.StatusCode,
 			Message:         repositoryError.Message,
-			StructAndMethod: "userService.setUserIsConfirmedStatusToTrue()",
+			StructAndMethod: "UserService.setUserIsConfirmedStatusToTrue()",
 			Argument:        &args,
 			ChildAppError:   repositoryError,
 			ChildError:      repositoryError.ChildError,

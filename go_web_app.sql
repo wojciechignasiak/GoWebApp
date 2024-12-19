@@ -12,7 +12,7 @@ CREATE TABLE user (
 CREATE TABLE account_confirmation (
     user_id CHAR(36) NOT NULL,
     FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
-    confirmation_code CHAR(36) UNIQUE NOT NULL
+    confirmation_code CHAR(36) UNIQUE NOT NULL,
     security_code CHAR(6) NOT NULL
 );
 
