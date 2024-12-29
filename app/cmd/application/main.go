@@ -9,15 +9,21 @@ import (
 	"app/internal/service"
 	servicecomponent "app/internal/service_component"
 	"fmt"
+	"os"
+	"strconv"
 )
 
 func main() {
+	db_port, err := strconv.Atoi(os.Getenv("DATABASE_PORT"))
+	if err != nil {
+		fmt.Println("Wrong database port: ", err)
+	}
 	dbConfig := database.DatabaseConfig{
-		Host:     "mysql",
-		Port:     3306,
-		User:     "melkey",
-		Password: "password1234",
-		Database: "blueprint",
+		Host:     os.Getenv("DATABASE_HOST"),
+		Port:     db_port,
+		User:     os.Getenv("DATABASE_USERNAME"),
+		Password: os.Getenv("DATABASE_PASSWORD"),
+		Database: os.Getenv("DATABASE_NAME"),
 	}
 	db, err := database.InitializeDatabase(dbConfig)
 

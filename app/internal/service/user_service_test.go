@@ -27,7 +27,7 @@ var ValidateUsernameTestcases = []struct {
 		"wk96",
 		&apperror.AppError{
 			StatusCode:      400,
-			Message:         "Username must contain between 5 and 20 characters",
+			Message:         "username must contain between 5 and 20 characters",
 			StructAndMethod: "UserService.validateUsername()",
 			Argument:        stringPtr("username: wk96"),
 			ChildAppError:   nil,
@@ -38,7 +38,7 @@ var ValidateUsernameTestcases = []struct {
 		"tooLongUsername1996!!!",
 		&apperror.AppError{
 			StatusCode:      400,
-			Message:         "Username must contain between 5 and 20 characters",
+			Message:         "username must contain between 5 and 20 characters",
 			StructAndMethod: "UserService.validateUsername()",
 			Argument:        stringPtr("username: tooLongUsername1996!!!"),
 			ChildAppError:   nil,
@@ -116,7 +116,7 @@ var ValidateEmailsTestcases = []struct {
 		"ignasiak_wojciech@icloud.com",
 		&apperror.AppError{
 			StatusCode:      400,
-			Message:         "Provided emails do not match",
+			Message:         "provided emails do not match",
 			StructAndMethod: "UserService.validateEmails()",
 			Argument:        stringPtr("email: wojciech_ignasiak@icloud.com, confirmEmail: ignasiak_wojciech@icloud.com"),
 			ChildAppError:   nil,
@@ -128,7 +128,7 @@ var ValidateEmailsTestcases = []struct {
 		"wojciech_ignasiakicloud.com",
 		&apperror.AppError{
 			StatusCode:      400,
-			Message:         "Invalid email format",
+			Message:         "invalid email format",
 			StructAndMethod: "UserService.validateEmails()",
 			Argument:        stringPtr("email: wojciech_ignasiakicloud.com, confirmEmail: wojciech_ignasiakicloud.com"),
 			ChildAppError:   nil,
@@ -206,7 +206,7 @@ var ValidatePasswordsTestcases = []struct {
 		"!hardPassw0rd.",
 		&apperror.AppError{
 			StatusCode:      400,
-			Message:         "Provided passwords are not the same",
+			Message:         "provided passwords are not the same",
 			StructAndMethod: "UserService.validatePasswords()",
 			Argument:        nil,
 			ChildAppError:   nil,
@@ -218,7 +218,7 @@ var ValidatePasswordsTestcases = []struct {
 		"!har1",
 		&apperror.AppError{
 			StatusCode:      400,
-			Message:         "Password must contain at least 8 characters",
+			Message:         "password must contain at least 8 characters",
 			StructAndMethod: "UserService.validatePasswords()",
 			Argument:        nil,
 			ChildAppError:   nil,
@@ -230,7 +230,7 @@ var ValidatePasswordsTestcases = []struct {
 		"hardpassword",
 		&apperror.AppError{
 			StatusCode:      403,
-			Message:         "Password must contain at least one digit and one special character",
+			Message:         "password must contain at least one digit and one special character",
 			StructAndMethod: "UserService.validatePasswords()",
 			Argument:        nil,
 			ChildAppError:   nil,

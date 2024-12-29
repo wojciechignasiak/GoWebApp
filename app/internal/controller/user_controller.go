@@ -1,6 +1,7 @@
 package controller
 
 import (
+	apperror "app/internal/app_error"
 	controllercomponent "app/internal/controller_component"
 	"app/internal/logs"
 	"app/internal/model"
@@ -32,7 +33,15 @@ func (uc *UserController) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	err := decoder.Decode(&newUser)
 	if err != nil {
-		http.Error(w, "message: invalid JSON input", http.StatusBadRequest)
+		invalidJson := apperror.AppError{
+			StatusCode:      400,
+			Message:         "invalid JSON input",
+			StructAndMethod: "UserController.RegisterUser()",
+			Argument:        nil,
+			ChildAppError:   nil,
+			ChildError:      nil,
+		}
+		uc.responseHandler.HandleError(w, &invalidJson)
 		return
 	}
 

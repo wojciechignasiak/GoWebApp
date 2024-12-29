@@ -246,7 +246,7 @@ func (us *userService) validateUsername(username string) *apperror.AppError {
 		args := fmt.Sprintf("username: %s", username)
 		validationError := apperror.AppError{
 			StatusCode:      400,
-			Message:         "Username must contain between 5 and 20 characters",
+			Message:         "username must contain between 5 and 20 characters",
 			StructAndMethod: "UserService.validateUsername()",
 			Argument:        &args,
 			ChildAppError:   nil,
@@ -262,7 +262,7 @@ func (us *userService) validateEmails(email, confirmEmail string) *apperror.AppE
 		args := fmt.Sprintf("email: %s, confirmEmail: %s", email, confirmEmail)
 		validationError := apperror.AppError{
 			StatusCode:      400,
-			Message:         "Provided emails do not match",
+			Message:         "provided emails do not match",
 			StructAndMethod: "UserService.validateEmails()",
 			Argument:        &args,
 			ChildAppError:   nil,
@@ -274,7 +274,7 @@ func (us *userService) validateEmails(email, confirmEmail string) *apperror.AppE
 		args := fmt.Sprintf("email: %s, confirmEmail: %s", email, confirmEmail)
 		validationError := apperror.AppError{
 			StatusCode:      400,
-			Message:         "Invalid email format",
+			Message:         "invalid email format",
 			StructAndMethod: "UserService.validateEmails()",
 			Argument:        &args,
 			ChildAppError:   nil,
@@ -301,7 +301,7 @@ func (us *userService) validatePasswords(password, confirmPassword string) *appe
 	if !us.arePasswordsTheSame(password, confirmPassword) {
 		validationError := apperror.AppError{
 			StatusCode:      400,
-			Message:         "Provided passwords are not the same",
+			Message:         "provided passwords are not the same",
 			StructAndMethod: "UserService.validatePasswords()",
 			Argument:        nil,
 			ChildAppError:   nil,
@@ -313,7 +313,7 @@ func (us *userService) validatePasswords(password, confirmPassword string) *appe
 	if !us.isPasswordLongEnough(password) {
 		validationError := apperror.AppError{
 			StatusCode:      400,
-			Message:         "Password must contain at least 8 characters",
+			Message:         "password must contain at least 8 characters",
 			StructAndMethod: "UserService.validatePasswords()",
 			Argument:        nil,
 			ChildAppError:   nil,
@@ -325,7 +325,7 @@ func (us *userService) validatePasswords(password, confirmPassword string) *appe
 	if !us.doesPasswordContainsSpecialCharacters(password) {
 		validationError := apperror.AppError{
 			StatusCode:      403,
-			Message:         "Password must contain at least one digit and one special character",
+			Message:         "password must contain at least one digit and one special character",
 			StructAndMethod: "UserService.validatePasswords()",
 			Argument:        nil,
 			ChildAppError:   nil,
