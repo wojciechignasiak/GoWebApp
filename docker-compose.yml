@@ -1,0 +1,75 @@
+services:
+  golang_api:
+    container_name: golang_api
+    build: 
+      context: ./app
+      dockerfile: Dockerfile
+    image: ghcr.io/wojciechignasiak/golang_api:0.0.1
+    ports:
+      - 8080:80
+    expose:
+      - 80
+    networks:
+      - backend-network
+    restart: unless-stopped
+    # volumes:
+    #   - ./app:/golang_api
+    #   # - ./app/bin:/golang_api/bin
+    depends_on:
+      - mysql
+    environment:
+      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USERNAME: ${DATABASE_USERNAME}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      SIT_DATABASE_HOST: ${SIT_DATABASE_HOST}
+      SIT_DATABASE_PORT: ${SIT_DATABASE_PORT}
+      SIT_DATABASE_NAME: ${SIT_DATABASE_NAME}
+      SIT_DATABASE_USERNAME: ${SIT_DATABASE_USERNAME}
+      SIT_DATABASE_PASSWORD: ${SIT_DATABASE_PASSWORD}
+
+  mysql:
+    container_name: ${DATABASE_HOST}
+    image: mysql:9.1.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DATABASE_NAME}
+      MYSQL_USER: ${DATABASE_USERNAME}
+      MYSQL_PASSWORD: ${DATABASE_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD}
+    networks:
+      - backend-network
+    ports:
+      - "${DATABASE_PORT}:3306"
+    expose:
+      - 3306
+    volumes:
+      - mysql_volume_bp:/var/lib/mysql
+
+  mysql-sit:
+    container_name: ${SIT_DATABASE_HOST}
+    image: mysql:9.1.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${SIT_DATABASE_NAME}
+      MYSQL_USER: ${SIT_DATABASE_USERNAME}
+      MYSQL_PASSWORD: ${SIT_DATABASE_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${SIT_DATABASE_ROOT_PASSWORD}
+    networks:
+      - backend-network
+    ports:
+      - "${SIT_DATABASE_PORT}:3306"
+    expose:
+      - 3306
+    volumes:
+      - mysql_volume_bp_sit:/var/lib/mysql
+
+volumes:
+  mysql_volume_bp:
+  mysql_volume_bp_sit:
+
+networks:
+  backend-network:
+    name: backend-network
+    driver: bridge
