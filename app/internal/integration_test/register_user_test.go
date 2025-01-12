@@ -233,7 +233,7 @@ func TestIntegration_RegisterUser(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(responseBodyMap, tc.expectedResponse) || resp.StatusCode != tc.expectedStatusCode {
-				t.Errorf("scenario: %s, expected response body: %v, got response body: %v, expected status code: %v, got status code: %v",
+				t.Errorf("\nscenario: %s, expected response body: %v, got response body: %v, expected status code: %v, got status code: %v\n",
 					tc.name, tc.expectedResponse, responseBodyMap, tc.expectedStatusCode, resp.StatusCode)
 			}
 

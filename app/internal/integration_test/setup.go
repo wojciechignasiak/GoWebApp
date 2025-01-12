@@ -92,3 +92,15 @@ func TruncateUserTable(db *sql.DB) error {
 	}
 	return nil
 }
+
+func TruncateAccountConfirmationTable(db *sql.DB) error {
+
+	query := `
+		DELETE FROM account_confirmation;
+	`
+	_, err := db.Exec(query)
+	if err != nil {
+		return err
+	}
+	return nil
+}
