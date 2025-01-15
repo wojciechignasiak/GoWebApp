@@ -751,3 +751,60 @@ func (us *userService) setUserIsConfirmedStatusToTrue(ctx context.Context, uow d
 	}
 	return nil
 }
+
+func (us *userService) GetUserCredentialsByEmail(ctx context.Context, email string) (*model.UserCredentials, *apperror.AppError) {
+
+	user, getUserByEmailError := us.getUserByEmail(ctx, email)
+
+	if getUserByEmailError != nil {
+		args := fmt.Sprintf("email: %s", email)
+		serviceError := apperror.AppError{
+			StatusCode:      getUserByEmailError.StatusCode,
+			Message:         getUserByEmailError.Message,
+			StructAndMethod: "UserService.GetUserCredentialsByEmail()",
+			Argument:        &args,
+			ChildAppError:   getUserByEmailError,
+			ChildError:      getUserByEmailError.ChildError,
+		}
+		return nil, &serviceError
+	}
+
+	if user == nil || user.IsAccountDeleted {
+		args := fmt.Sprintf("email: %s", email)
+		serviceError := apperror.AppError{
+			StatusCode:      401,
+			Message:         "Invalid login credentials",
+			StructAndMethod: "UserService.GetUserCredentialsByEmail()",
+			Argument:        &args,
+			ChildAppError:   nil,
+			ChildError:      nil,
+		}
+		return nil, &serviceError
+	}
+
+	if user.IsAccountConfirmed == false {
+		args := fmt.Sprintf("email: %s", email)
+		serviceError := apperror.AppError{
+			StatusCode:      401,
+			Message:         "User account not confirmed",
+			StructAndMethod: "UserService.GetUserCredentialsByEmail()",
+			Argument:        &args,
+			ChildAppError:   nil,
+			ChildError:      nil,
+		}
+		return nil, &serviceError
+	}
+
+	userCredentials := us.extractCredentialsFromUser(*user)
+
+	return userCredentials, nil
+}
+
+func (us *userService) extractCredentialsFromUser(user model.User) *model.UserCredentials {
+	userCredentials := model.UserCredentials{
+		Email:    user.Email,
+		Password: user.Password,
+		Salt:     user.Salt,
+	}
+	return &userCredentials
+}

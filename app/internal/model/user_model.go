@@ -33,3 +33,9 @@ type ReturnUser struct {
 	IsAccountConfirmed bool      `json:"is_account_confirmed" db:"is_account_confirmed"`
 	IsAccountDeleted   bool      `json:"is_account_deleted" db:"is_account_deleted"`
 }
+
+type UserCredentials struct {
+	Email    string
+	Password []byte
+	Salt     []byte
+}
