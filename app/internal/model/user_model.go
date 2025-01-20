@@ -35,6 +35,7 @@ type ReturnUser struct {
 }
 
 type UserCredentials struct {
+	Id       uuid.UUID
 	Email    string
 	Password []byte
 	Salt     []byte

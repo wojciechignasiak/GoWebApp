@@ -16,6 +16,7 @@ import (
 type UserService interface {
 	RegisterUser(ctx context.Context, newUser model.CreateUser) *apperror.AppError
 	ConfirmAccount(ctx context.Context, confirmAccount model.ConfirmAccount) *apperror.AppError
+	GetUserCredentialsByEmail(ctx context.Context, email string) (*model.UserCredentials, *apperror.AppError)
 }
 
 type userService struct {
@@ -773,7 +774,7 @@ func (us *userService) GetUserCredentialsByEmail(ctx context.Context, email stri
 		args := fmt.Sprintf("email: %s", email)
 		serviceError := apperror.AppError{
 			StatusCode:      401,
-			Message:         "Invalid login credentials",
+			Message:         "Invalid email or password",
 			StructAndMethod: "UserService.GetUserCredentialsByEmail()",
 			Argument:        &args,
 			ChildAppError:   nil,
@@ -802,6 +803,7 @@ func (us *userService) GetUserCredentialsByEmail(ctx context.Context, email stri
 
 func (us *userService) extractCredentialsFromUser(user model.User) *model.UserCredentials {
 	userCredentials := model.UserCredentials{
+		Id:       user.Id,
 		Email:    user.Email,
 		Password: user.Password,
 		Salt:     user.Salt,
