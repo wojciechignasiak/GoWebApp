@@ -8,7 +8,8 @@ import (
 
 func (s *Server) RegisterRoutes() http.Handler {
 	r := mux.NewRouter()
-	r.HandleFunc("/user/register", s.userController.RegisterUser).Methods("POST")
+	r.HandleFunc("/auth/register", s.authController.Register).Methods("POST")
+	r.HandleFunc("/auth/login", s.authController.Login).Methods("POST")
 	r.HandleFunc("/user/confirm-account/{confirmationCode}/{securityCode}", s.userController.ConfirmAccount).Methods("PUT")
 	return r
 }

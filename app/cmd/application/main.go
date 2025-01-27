@@ -30,19 +30,32 @@ func main() {
 	if err != nil {
 		fmt.Println("Failed to initialize database: ", err)
 	}
-	commonTools := servicecomponent.NewCommonTools()
+
+	ug := servicecomponent.NewUuidGenerator()
+
+	cv := servicecomponent.NewCredentialsValidator()
+
 	uowFactory := func() (database.UnitOfWork, error) {
 		return database.NewUnitOfWork(db), err
 	}
-	userService := service.NewUserService(uowFactory, commonTools)
+
+	us := service.NewUserService(uowFactory, ug)
+
+	sms := service.NewSessionManager(ug)
+
+	as := service.NewAuthService(us, sms)
+
+	rs := service.NewRegistrationService(as, us, cv, ug)
 
 	logger := logs.NewLogger()
 	responseHandler := controllercomponent.NewResponseHandler()
-	userController := controller.NewUserController(userService, responseHandler, logger)
+	authController := controller.NewAuthController(as, rs, responseHandler, logger)
+	userController := controller.NewUserController(us, responseHandler, logger)
 	server := server.NewServer(
 		"",
 		80,
 		userController,
+		authController,
 	)
 
 	server.ListenAndServe()
