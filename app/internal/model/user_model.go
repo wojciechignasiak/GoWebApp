@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type CreateUser struct {
+type NewUser struct {
 	Username        string `json:"username"`
 	Email           string `json:"email"`
 	ConfirmEmail    string `json:"confirm_email"`
@@ -34,9 +34,8 @@ type ReturnUser struct {
 	IsAccountDeleted   bool      `json:"is_account_deleted" db:"is_account_deleted"`
 }
 
-type UserCredentials struct {
+type UserSession struct {
 	Id       uuid.UUID
 	Email    string
-	Password []byte
-	Salt     []byte
+	Username string
 }

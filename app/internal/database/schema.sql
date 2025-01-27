@@ -2,7 +2,7 @@ CREATE TABLE user (
     id CHAR(36) NOT NULL PRIMARY KEY,
     username VARCHAR(20) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
-    password BINARY(64) NOT NULL,
+    password BINARY(32) NOT NULL,
     salt BINARY(16) NOT NULL,
     registration_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_account_confirmed BOOLEAN NOT NULL DEFAULT FALSE,

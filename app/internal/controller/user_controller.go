@@ -1,12 +1,10 @@
 package controller
 
 import (
-	apperror "app/internal/app_error"
 	controllercomponent "app/internal/controller_component"
 	"app/internal/logs"
 	"app/internal/model"
 	"app/internal/service"
-	"encoding/json"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -25,39 +23,6 @@ func NewUserController(userService service.UserService, responseHandler controll
 		responseHandler: responseHandler,
 		logger:          logger,
 	}
-}
-
-func (uc *UserController) RegisterUser(w http.ResponseWriter, r *http.Request) {
-	var newUser model.CreateUser
-	decoder := json.NewDecoder(r.Body)
-
-	err := decoder.Decode(&newUser)
-	if err != nil {
-		invalidJson := apperror.AppError{
-			StatusCode:      400,
-			Message:         "invalid JSON input",
-			StructAndMethod: "UserController.RegisterUser()",
-			Argument:        nil,
-			ChildAppError:   nil,
-			ChildError:      nil,
-		}
-		uc.responseHandler.HandleError(w, &invalidJson)
-		return
-	}
-
-	ctx := r.Context()
-	serviceError := uc.userService.RegisterUser(ctx, newUser)
-
-	if serviceError != nil {
-		uc.logger.LogRequest(serviceError.StatusCode, "/user/register")
-		if serviceError.StatusCode == http.StatusInternalServerError {
-			uc.logger.LogAppError(serviceError)
-		}
-		uc.responseHandler.HandleError(w, serviceError)
-		return
-	}
-	uc.logger.LogRequest(http.StatusCreated, "/user/register")
-	uc.responseHandler.SendResponse(w, http.StatusCreated, "user registered successfully")
 }
 
 func (uc *UserController) ConfirmAccount(w http.ResponseWriter, r *http.Request) {
