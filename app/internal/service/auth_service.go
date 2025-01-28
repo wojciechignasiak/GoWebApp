@@ -23,7 +23,7 @@ type authService struct {
 	sms SessionManagementService
 }
 
-func NewAuthService(us UserService, sms SessionManagementService) *authService {
+func NewAuthService(us UserService, sms SessionManagementService) AuthService {
 	return &authService{
 		us:  us,
 		sms: sms,
@@ -45,7 +45,7 @@ func (as *authService) Login(ctx context.Context, credentials model.Credentials)
 		}
 		return nil, &serviceError
 	}
-	fmt.Println("Checking does user exists")
+
 	if user == nil {
 		credentials.Password = "anonymized"
 		args := fmt.Sprintf("credentials %v", credentials)
@@ -59,7 +59,7 @@ func (as *authService) Login(ctx context.Context, credentials model.Credentials)
 		}
 		return nil, &serviceError
 	}
-	fmt.Println("Checking is user confirmed")
+
 	if user.IsAccountConfirmed == false {
 		credentials.Password = "anonymized"
 		args := fmt.Sprintf("credentials %v", credentials)
@@ -73,7 +73,7 @@ func (as *authService) Login(ctx context.Context, credentials model.Credentials)
 		}
 		return nil, &serviceError
 	}
-	fmt.Println("Checking is user deleted")
+
 	if user.IsAccountDeleted == true {
 		credentials.Password = "anonymized"
 		args := fmt.Sprintf("credentials %v", credentials)
@@ -87,7 +87,7 @@ func (as *authService) Login(ctx context.Context, credentials model.Credentials)
 		}
 		return nil, &serviceError
 	}
-	fmt.Println("Checking is password correct")
+
 	isPasswordCorrect := as.verifyPassword(credentials.Password, user.Password, user.Salt)
 	if isPasswordCorrect == false {
 		credentials.Password = "anonymized"
@@ -103,7 +103,6 @@ func (as *authService) Login(ctx context.Context, credentials model.Credentials)
 		return nil, &serviceError
 	}
 
-	fmt.Println("Converting user model to user session")
 	userSession := as.convertUserModelToUserSession(*user)
 	sessionId, sessionError := as.sms.CreateSession(*userSession)
 
@@ -136,12 +135,6 @@ func (as *authService) convertUserModelToUserSession(user model.User) *model.Use
 
 func (as *authService) verifyPassword(provided_password string, user_password, salt []byte) bool {
 	hashedPassword := as.HashPassword(provided_password, salt)
-
-	fmt.Printf("Provided password: %s\n", provided_password)
-	fmt.Printf("Hashed provided password: %x\n", hashedPassword)
-	fmt.Printf("Stored password: %x\n", user_password)
-	fmt.Printf("Salt: %x\n", salt)
-	fmt.Printf("Comparison result: %v\n", subtle.ConstantTimeCompare(*hashedPassword, user_password))
 	return subtle.ConstantTimeCompare(*hashedPassword, user_password) == 1
 }
 

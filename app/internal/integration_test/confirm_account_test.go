@@ -197,13 +197,13 @@ func TestIntegration_ConfirmAccount(t *testing.T) {
 
 	userService := service.NewUserService(func() (database.UnitOfWork, error) {
 		return database.NewUnitOfWork(db), nil
-	}, servicecomponent.NewCommonTools())
+	}, servicecomponent.NewUuidGenerator())
 
 	logger := logs.NewLogger()
 	responseHandler := controllercomponent.NewResponseHandler()
 	userController := controller.NewUserController(userService, responseHandler, logger)
 
-	testServer := httptest.NewServer(server.NewServer("", 8080, userController).Handler)
+	testServer := httptest.NewServer(server.NewServer("", 8080, userController, nil).Handler)
 	defer testServer.Close()
 
 	for _, tc := range confirmAccountTestCases {

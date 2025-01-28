@@ -34,7 +34,7 @@ var registerUserTestCases = []struct {
 			"confirm_password": "secure_password123",
 		},
 		map[string]interface{}{
-			"message": "user registered successfully",
+			"message": "registered successfully",
 		},
 		201,
 	},
@@ -176,13 +176,19 @@ func TestIntegration_RegisterUser(t *testing.T) {
 
 	userService := service.NewUserService(func() (database.UnitOfWork, error) {
 		return database.NewUnitOfWork(db), nil
-	}, servicecomponent.NewCommonTools())
+	}, servicecomponent.NewUuidGenerator())
+
+	sessionManagementService := service.NewSessionManagementService(servicecomponent.NewUuidGenerator())
+
+	authService := service.NewAuthService(userService, sessionManagementService)
+
+	registrationService := service.NewRegistrationService(authService, userService, servicecomponent.NewCredentialsValidator(), servicecomponent.NewUuidGenerator())
 
 	logger := logs.NewLogger()
 	responseHandler := controllercomponent.NewResponseHandler()
-	userController := controller.NewUserController(userService, responseHandler, logger)
+	authController := controller.NewAuthController(authService, registrationService, responseHandler, logger)
 
-	testServer := httptest.NewServer(server.NewServer("", 8080, userController).Handler)
+	testServer := httptest.NewServer(server.NewServer("", 8080, nil, authController).Handler)
 	defer testServer.Close()
 
 	for _, tc := range registerUserTestCases {
@@ -207,7 +213,7 @@ func TestIntegration_RegisterUser(t *testing.T) {
 
 				postBody, _ = json.Marshal(newRequestBody)
 
-				_, err := http.Post(testServer.URL+"/user/register", "application/json", bytes.NewReader(postBody))
+				_, err := http.Post(testServer.URL+"/auth/register", "application/json", bytes.NewReader(postBody))
 				if err != nil {
 					t.Fatalf("failed to send request to register user for duplicate test case: %v", err)
 				}
@@ -215,7 +221,7 @@ func TestIntegration_RegisterUser(t *testing.T) {
 				postBody, _ = json.Marshal(tc.requestBody)
 			}
 
-			resp, err := http.Post(testServer.URL+"/user/register", "application/json", bytes.NewReader(postBody))
+			resp, err := http.Post(testServer.URL+"/auth/register", "application/json", bytes.NewReader(postBody))
 			if err != nil {
 				t.Fatalf("failed to send request: %v", err)
 			}

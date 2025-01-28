@@ -15,7 +15,7 @@ type CredentialsValidator interface {
 
 type credentialsValidator struct{}
 
-func NewCredentialsValidator() *credentialsValidator {
+func NewCredentialsValidator() CredentialsValidator {
 	return &credentialsValidator{}
 }
 
