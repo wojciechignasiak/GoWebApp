@@ -21,3 +21,5 @@
 go.work
 
 /app/bin
+.DS_Store
+app/.DS_Store

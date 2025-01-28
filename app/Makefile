@@ -15,5 +15,8 @@
 test:
 	go test -v ./... -count=1
 
+test docker:
+	docker exec -it golang_api make test
+	
 requirements:
 	go mod tidy
