@@ -21,7 +21,7 @@ type registrationService struct {
 	ug servicecomponent.UuidGenerator
 }
 
-func NewRegistrationService(as AuthService, us UserService, cv servicecomponent.CredentialsValidator, ug servicecomponent.UuidGenerator) *registrationService {
+func NewRegistrationService(as AuthService, us UserService, cv servicecomponent.CredentialsValidator, ug servicecomponent.UuidGenerator) RegistrationService {
 	return &registrationService{
 		as: as,
 		us: us,
@@ -54,11 +54,11 @@ func (rs *registrationService) Register(ctx context.Context, newUser model.NewUs
 		newUser.ConfirmPassword = "anonymized"
 		args := fmt.Sprintf("newUser: %v", newUser)
 		serviceError := apperror.AppError{
-			StatusCode:      validationError.StatusCode,
-			Message:         validationError.Message,
+			StatusCode:      duplicateError.StatusCode,
+			Message:         duplicateError.Message,
 			StructAndMethod: "RegistrationService.RegisterUser()",
 			Argument:        &args,
-			ChildAppError:   validationError,
+			ChildAppError:   duplicateError,
 			ChildError:      nil,
 		}
 		return &serviceError

@@ -22,7 +22,7 @@ type sessionManagementService struct {
 	ug       servicecomponent.UuidGenerator
 }
 
-func NewSessionManager(ug servicecomponent.UuidGenerator) *sessionManagementService {
+func NewSessionManagementService(ug servicecomponent.UuidGenerator) SessionManagementService {
 	return &sessionManagementService{
 		sessions: make(map[uuid.UUID]model.UserSession),
 		ug:       ug,

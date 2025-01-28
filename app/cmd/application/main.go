@@ -41,7 +41,7 @@ func main() {
 
 	us := service.NewUserService(uowFactory, ug)
 
-	sms := service.NewSessionManager(ug)
+	sms := service.NewSessionManagementService(ug)
 
 	as := service.NewAuthService(us, sms)
 

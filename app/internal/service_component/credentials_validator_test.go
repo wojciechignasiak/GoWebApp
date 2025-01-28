@@ -1,4 +1,4 @@
-package service
+package servicecomponent
 
 import (
 	apperror "app/internal/app_error"
@@ -28,7 +28,7 @@ var ValidateUsernameTestcases = []struct {
 		&apperror.AppError{
 			StatusCode:      400,
 			Message:         "username must contain between 5 and 20 characters",
-			StructAndMethod: "UserService.validateUsername()",
+			StructAndMethod: "CredentialsValidator.validateUsername()",
 			Argument:        stringPtr("username: wk96"),
 			ChildAppError:   nil,
 			ChildError:      nil},
@@ -39,7 +39,7 @@ var ValidateUsernameTestcases = []struct {
 		&apperror.AppError{
 			StatusCode:      400,
 			Message:         "username must contain between 5 and 20 characters",
-			StructAndMethod: "UserService.validateUsername()",
+			StructAndMethod: "CredentialsValidator.validateUsername()",
 			Argument:        stringPtr("username: tooLongUsername1996!!!"),
 			ChildAppError:   nil,
 			ChildError:      nil},
@@ -47,11 +47,11 @@ var ValidateUsernameTestcases = []struct {
 }
 
 func TestValidateUsername(t *testing.T) {
-	us := &userService{}
+	cv := &credentialsValidator{}
 	for _, tc := range ValidateUsernameTestcases {
 		t.Run(tc.name, func(t *testing.T) {
 			expected := tc.expected
-			got := us.validateUsername(tc.username)
+			got := cv.ValidateUsername(tc.username)
 
 			if got == nil && expected == nil {
 				return
@@ -117,7 +117,7 @@ var ValidateEmailsTestcases = []struct {
 		&apperror.AppError{
 			StatusCode:      400,
 			Message:         "provided emails do not match",
-			StructAndMethod: "UserService.validateEmails()",
+			StructAndMethod: "CredentialsValidator.validateEmails()",
 			Argument:        stringPtr("email: wojciech_ignasiak@icloud.com, confirmEmail: ignasiak_wojciech@icloud.com"),
 			ChildAppError:   nil,
 			ChildError:      nil},
@@ -129,7 +129,7 @@ var ValidateEmailsTestcases = []struct {
 		&apperror.AppError{
 			StatusCode:      400,
 			Message:         "invalid email format",
-			StructAndMethod: "UserService.validateEmails()",
+			StructAndMethod: "CredentialsValidator.validateEmails()",
 			Argument:        stringPtr("email: wojciech_ignasiakicloud.com, confirmEmail: wojciech_ignasiakicloud.com"),
 			ChildAppError:   nil,
 			ChildError:      nil},
@@ -137,11 +137,11 @@ var ValidateEmailsTestcases = []struct {
 }
 
 func TestValidateEmails(t *testing.T) {
-	us := &userService{}
+	cv := &credentialsValidator{}
 	for _, tc := range ValidateEmailsTestcases {
 		t.Run(tc.name, func(t *testing.T) {
 			expected := tc.expected
-			got := us.validateEmails(tc.email, tc.confirmEmail)
+			got := cv.ValidateEmails(tc.email, tc.confirmEmail)
 
 			if got == nil && expected == nil {
 				return
@@ -207,7 +207,7 @@ var ValidatePasswordsTestcases = []struct {
 		&apperror.AppError{
 			StatusCode:      400,
 			Message:         "provided passwords are not the same",
-			StructAndMethod: "UserService.validatePasswords()",
+			StructAndMethod: "CredentialsValidator.validatePasswords()",
 			Argument:        nil,
 			ChildAppError:   nil,
 			ChildError:      nil},
@@ -219,7 +219,7 @@ var ValidatePasswordsTestcases = []struct {
 		&apperror.AppError{
 			StatusCode:      400,
 			Message:         "password must contain at least 8 characters",
-			StructAndMethod: "UserService.validatePasswords()",
+			StructAndMethod: "CredentialsValidator.validatePasswords()",
 			Argument:        nil,
 			ChildAppError:   nil,
 			ChildError:      nil},
@@ -231,7 +231,7 @@ var ValidatePasswordsTestcases = []struct {
 		&apperror.AppError{
 			StatusCode:      403,
 			Message:         "password must contain at least one digit and one special character",
-			StructAndMethod: "UserService.validatePasswords()",
+			StructAndMethod: "CredentialsValidator.validatePasswords()",
 			Argument:        nil,
 			ChildAppError:   nil,
 			ChildError:      nil},
@@ -239,11 +239,11 @@ var ValidatePasswordsTestcases = []struct {
 }
 
 func TestValidatePasswords(t *testing.T) {
-	us := &userService{}
+	cv := &credentialsValidator{}
 	for _, tc := range ValidatePasswordsTestcases {
 		t.Run(tc.name, func(t *testing.T) {
 			expected := tc.expected
-			got := us.validatePasswords(tc.password, tc.confirmPassword)
+			got := cv.ValidatePasswords(tc.password, tc.confirmPassword)
 
 			if got == nil && expected == nil {
 				return

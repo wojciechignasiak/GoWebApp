@@ -12,7 +12,7 @@ type UuidGenerator interface {
 
 type uuidGenerator struct{}
 
-func NewUuidGenerator() *uuidGenerator {
+func NewUuidGenerator() UuidGenerator {
 	return &uuidGenerator{}
 }
 

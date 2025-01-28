@@ -24,7 +24,7 @@ type userService struct {
 	ug         servicecomponent.UuidGenerator
 }
 
-func NewUserService(uowFactory func() (database.UnitOfWork, error), ug servicecomponent.UuidGenerator) *userService {
+func NewUserService(uowFactory func() (database.UnitOfWork, error), ug servicecomponent.UuidGenerator) UserService {
 	return &userService{
 		uowFactory: uowFactory,
 		ug:         ug,

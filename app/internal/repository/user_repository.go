@@ -25,7 +25,7 @@ type userRepository struct {
 	db *sql.DB
 }
 
-func NewUserRepository(tx *sql.Tx, db *sql.DB) *userRepository {
+func NewUserRepository(tx *sql.Tx, db *sql.DB) UserRepository {
 	if db == nil && tx == nil {
 		panic("Missing connection and transaction in UserRepository.")
 	}
