@@ -10,18 +10,22 @@ type UuidGenerator interface {
 	GenerateUuid() (*uuid.UUID, *apperror.AppError)
 }
 
-type uuidGenerator struct{}
+type uuidGenerator struct {
+	uuidFunc func() (uuid.UUID, error)
+}
 
 func NewUuidGenerator() UuidGenerator {
-	return &uuidGenerator{}
+	return &uuidGenerator{
+		uuidFunc: uuid.NewRandom,
+	}
 }
 
 func (ug *uuidGenerator) GenerateUuid() (*uuid.UUID, *apperror.AppError) {
-	newUUID, err := uuid.NewRandom()
+	newUUID, err := ug.uuidFunc()
 	if err != nil {
 		generationError := apperror.AppError{
 			StatusCode:      500,
-			Message:         "Error occured while generating new UUID",
+			Message:         "Error occurred while generating new UUID",
 			StructAndMethod: "UuidGenerator.GenerateUUID()",
 			Argument:        nil,
 			ChildAppError:   nil,
