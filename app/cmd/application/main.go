@@ -34,6 +34,7 @@ func main() {
 	ug := servicecomponent.NewUuidGenerator()
 
 	cv := servicecomponent.NewCredentialsValidator()
+	sgaph := servicecomponent.NewSaltGeneratorAndPasswordHasher()
 
 	uowFactory := func() (database.UnitOfWork, error) {
 		return database.NewUnitOfWork(db), err
@@ -43,9 +44,9 @@ func main() {
 
 	sms := service.NewSessionManagementService(ug)
 
-	as := service.NewAuthService(us, sms)
+	as := service.NewAuthService(us, sms, sgaph)
 
-	rs := service.NewRegistrationService(as, us, cv, ug)
+	rs := service.NewRegistrationService(us, sgaph, cv, ug)
 
 	logger := logs.NewLogger()
 	responseHandler := controllercomponent.NewResponseHandler()

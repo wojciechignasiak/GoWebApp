@@ -17,7 +17,7 @@ func NewUuidGenerator() UuidGenerator {
 }
 
 func (ug *uuidGenerator) GenerateUuid() (*uuid.UUID, *apperror.AppError) {
-	newUUID, err := uuid.NewV7()
+	newUUID, err := uuid.NewRandom()
 	if err != nil {
 		generationError := apperror.AppError{
 			StatusCode:      500,

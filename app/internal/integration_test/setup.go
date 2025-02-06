@@ -1,17 +1,66 @@
 package integration
 
 import (
+	"app/internal/controller"
+	controllercomponent "app/internal/controller_component"
 	"app/internal/database"
+	"app/internal/logs"
+	"app/internal/model"
+	"app/internal/server"
+	"app/internal/service"
+	servicecomponent "app/internal/service_component"
+	"context"
 	"database/sql"
-	"fmt"
+	"net/http/httptest"
 	"os"
+	"time"
 )
 
-func SetupTestDB() (*sql.DB, error) {
-	// db_port, err := strconv.Atoi(os.Getenv("SIT_DATABASE_PORT"))
-	// if err != nil {
-	// 	return nil, err
-	// }
+type SetupIntegrationTestServerTools struct{}
+
+func NewSetupIntegrationTestServerTools() SetupIntegrationTestServerTools {
+	return SetupIntegrationTestServerTools{}
+}
+
+func (sitst *SetupIntegrationTestServerTools) SetupTestServer(db *sql.DB) *httptest.Server {
+
+	credentialsValidator := servicecomponent.NewCredentialsValidator()
+	uuidGenerator := servicecomponent.NewUuidGenerator()
+	saltGeneratorAndPasswordHasher := servicecomponent.NewSaltGeneratorAndPasswordHasher()
+
+	userService := service.NewUserService(func() (database.UnitOfWork, error) {
+		return database.NewUnitOfWork(db), nil
+	}, uuidGenerator)
+	sessionManagementService := service.NewSessionManagementService(uuidGenerator)
+	authService := service.NewAuthService(userService, sessionManagementService, saltGeneratorAndPasswordHasher)
+
+	registrationService := service.NewRegistrationService(userService, saltGeneratorAndPasswordHasher, credentialsValidator, uuidGenerator)
+
+	logger := logs.NewLogger()
+
+	responseHandler := controllercomponent.NewResponseHandler()
+
+	authController := controller.NewAuthController(authService, registrationService, responseHandler, logger)
+	userController := controller.NewUserController(userService, responseHandler, logger)
+
+	testServer := httptest.NewServer(server.NewServer("", 8080, userController, authController).Handler)
+
+	return testServer
+}
+
+func (sitst *SetupIntegrationTestServerTools) GetCurrentTime() *time.Time {
+	currentTime := time.Now()
+	return &currentTime
+}
+
+type SetupIntegrationTestDatabaseTools struct{}
+
+func NewSetupIntegrationTestDatabaseTools() SetupIntegrationTestDatabaseTools {
+	return SetupIntegrationTestDatabaseTools{}
+}
+
+func (sitdt *SetupIntegrationTestDatabaseTools) SetupTestDB() (*sql.DB, error) {
+
 	dbConfig := database.DatabaseConfig{
 		Host:     os.Getenv("SIT_DATABASE_HOST"),
 		Port:     3306,
@@ -29,59 +78,15 @@ func SetupTestDB() (*sql.DB, error) {
 	return db, nil
 }
 
-func InitializeDBInstance(db *sql.DB) error {
-	db_name := os.Getenv("SIT_DATABASE_NAME")
-
-	// Sprawdzenie, czy baza danych już istnieje.
-	var dbExists bool
-	err := db.QueryRow("SELECT 1 FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?", db_name).Scan(&dbExists)
-	if err != nil && err != sql.ErrNoRows {
-		return fmt.Errorf("error durning checking does exists: %w", err)
-	}
-
-	if dbExists {
-		fmt.Printf("Database '%s' already exists. Skipping.\n", db_name)
-		return nil
-	}
-
-	query := fmt.Sprintf("CREATE DATABASE `%s`;", db_name)
-	_, err = db.Exec(query)
-	if err != nil {
-		return fmt.Errorf("error occured durning creating database: %w", err) // Dodajemy kontekst do błędu
-	}
-	return nil
+func (sitdt *SetupIntegrationTestDatabaseTools) InsertUser(db *sql.DB, user model.User) {
+	ctx := context.Background()
+	unitOfWork := database.NewUnitOfWork(db)
+	unitOfWork.BeginTransaction()
+	unitOfWork.UserRepository().CreateUser(ctx, user)
+	unitOfWork.Commit()
 }
 
-// func InitializeDBSchema(db *sql.DB) error { // Dodajemy argument *testing.T
-// 	var projectRoot string
-
-// 	_, filename, _, ok := runtime.Caller(0)
-// 	if !ok {
-// 		return fmt.Errorf("nie można uzyskać informacji o pliku")
-// 	}
-// 	dirname := filepath.Dir(filename)
-// 	projectRoot = filepath.Join(dirname, "..", "..") // Cofamy się o dwa katalogi (do korzenia projektu)
-
-// 	path := filepath.Join(projectRoot, "internal", "database", "schema.sql")
-// 	fmt.Printf("Path: %v\n", path) // Dodajemy newline dla czytelności
-
-// 	c, err := os.ReadFile(path)
-// 	if err != nil {
-// 		return fmt.Errorf("błąd odczytu pliku schema.sql: %w", err)
-// 	}
-// 	queries := string(c)
-
-// 	parts := strings.Split(queries, ";")
-// 	for _, query := range parts {
-// 		_, err = db.Exec(query)
-// 		if err != nil {
-// 			return fmt.Errorf("błąd wykonania zapytania SQL: %w", err)
-// 		}
-// 	}
-// 	return nil
-// }
-
-func TruncateUserTable(db *sql.DB) error {
+func (sitdt *SetupIntegrationTestDatabaseTools) TruncateUserTable(db *sql.DB) error {
 
 	query := `
 		DELETE FROM user;
@@ -93,7 +98,15 @@ func TruncateUserTable(db *sql.DB) error {
 	return nil
 }
 
-func TruncateAccountConfirmationTable(db *sql.DB) error {
+func (sitdt *SetupIntegrationTestDatabaseTools) InsertAccountConfirmation(db *sql.DB, accountConfirmation model.AccountConfirmation) {
+	ctx := context.Background()
+	unitOfWork := database.NewUnitOfWork(db)
+	unitOfWork.BeginTransaction()
+	unitOfWork.UserRepository().CreateAccountConfirmation(ctx, accountConfirmation)
+	unitOfWork.Commit()
+}
+
+func (sitdt *SetupIntegrationTestDatabaseTools) TruncateAccountConfirmationTable(db *sql.DB) error {
 
 	query := `
 		DELETE FROM account_confirmation;

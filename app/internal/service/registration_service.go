@@ -15,18 +15,18 @@ type RegistrationService interface {
 }
 
 type registrationService struct {
-	as AuthService
-	us UserService
-	cv servicecomponent.CredentialsValidator
-	ug servicecomponent.UuidGenerator
+	us    UserService
+	sgaph servicecomponent.SaltGeneratorAndPasswordHasher
+	cv    servicecomponent.CredentialsValidator
+	ug    servicecomponent.UuidGenerator
 }
 
-func NewRegistrationService(as AuthService, us UserService, cv servicecomponent.CredentialsValidator, ug servicecomponent.UuidGenerator) RegistrationService {
+func NewRegistrationService(us UserService, sgaph servicecomponent.SaltGeneratorAndPasswordHasher, cv servicecomponent.CredentialsValidator, ug servicecomponent.UuidGenerator) RegistrationService {
 	return &registrationService{
-		as: as,
-		us: us,
-		cv: cv,
-		ug: ug,
+		us:    us,
+		sgaph: sgaph,
+		cv:    cv,
+		ug:    ug,
 	}
 }
 
@@ -81,7 +81,7 @@ func (rs *registrationService) Register(ctx context.Context, newUser model.NewUs
 		return &serviceError
 	}
 
-	salt, generationError := rs.as.GenerateSalt(16)
+	salt, generationError := rs.sgaph.GenerateSalt()
 	if generationError != nil {
 		newUser.Password = "anonymized"
 		newUser.ConfirmPassword = "anonymized"
@@ -97,7 +97,7 @@ func (rs *registrationService) Register(ctx context.Context, newUser model.NewUs
 		return &serviceError
 	}
 
-	hashed_password := rs.as.HashPassword(newUser.Password, *salt)
+	hashed_password := rs.sgaph.HashPassword(newUser.Password, *salt)
 
 	user := rs.convertNewUserModelToUserModel(newUser, *id, *salt, *hashed_password)
 	createUserError := rs.us.CreateUser(ctx, *user)
