@@ -1,0 +1,16 @@
+meta {
+  name: Logout
+  type: http
+  seq: 5
+}
+
+delete {
+  url: http://localhost:8080/auth/logout
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Cookie: SessionId=b5e20a4c-6952-48a4-8757-c0b51c7263f0
+}
