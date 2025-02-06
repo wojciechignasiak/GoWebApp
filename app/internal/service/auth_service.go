@@ -3,30 +3,29 @@ package service
 import (
 	apperror "app/internal/app_error"
 	"app/internal/model"
+	servicecomponent "app/internal/service_component"
 	"context"
-	"crypto/rand"
 	"crypto/subtle"
 	"fmt"
 
 	"github.com/google/uuid"
-	"golang.org/x/crypto/argon2"
 )
 
 type AuthService interface {
 	Login(ctx context.Context, credentials model.Credentials) (*uuid.UUID, *apperror.AppError)
-	HashPassword(password string, salt []byte) *[]byte
-	GenerateSalt(length int) (*[]byte, *apperror.AppError)
 }
 
 type authService struct {
-	us  UserService
-	sms SessionManagementService
+	us    UserService
+	sms   SessionManagementService
+	sgaph servicecomponent.SaltGeneratorAndPasswordHasher
 }
 
-func NewAuthService(us UserService, sms SessionManagementService) AuthService {
+func NewAuthService(us UserService, sms SessionManagementService, sgaph servicecomponent.SaltGeneratorAndPasswordHasher) AuthService {
 	return &authService{
-		us:  us,
-		sms: sms,
+		us:    us,
+		sms:   sms,
+		sgaph: sgaph,
 	}
 }
 
@@ -87,7 +86,6 @@ func (as *authService) Login(ctx context.Context, credentials model.Credentials)
 		}
 		return nil, &serviceError
 	}
-
 	isPasswordCorrect := as.verifyPassword(credentials.Password, user.Password, user.Salt)
 	if isPasswordCorrect == false {
 		credentials.Password = "anonymized"
@@ -102,7 +100,6 @@ func (as *authService) Login(ctx context.Context, credentials model.Credentials)
 		}
 		return nil, &serviceError
 	}
-
 	userSession := as.convertUserModelToUserSession(*user)
 	sessionId, sessionError := as.sms.CreateSession(*userSession)
 
@@ -134,33 +131,6 @@ func (as *authService) convertUserModelToUserSession(user model.User) *model.Use
 }
 
 func (as *authService) verifyPassword(provided_password string, user_password, salt []byte) bool {
-	hashedPassword := as.HashPassword(provided_password, salt)
+	hashedPassword := as.sgaph.HashPassword(provided_password, salt)
 	return subtle.ConstantTimeCompare(*hashedPassword, user_password) == 1
-}
-
-func (as *authService) HashPassword(password string, salt []byte) *[]byte {
-	timeCost := uint32(3)
-	memoryCost := uint32(64 * 1024)
-	threads := uint8(4)
-	keyLength := uint32(32)
-	hash := argon2.IDKey([]byte(password), salt, timeCost, memoryCost, threads, keyLength)
-	return &hash
-}
-
-func (as *authService) GenerateSalt(length int) (*[]byte, *apperror.AppError) {
-	salt := make([]byte, length)
-	_, err := rand.Read(salt)
-	if err != nil {
-		args := fmt.Sprintf("length: %d", length)
-		generationError := apperror.AppError{
-			StatusCode:      500,
-			Message:         "Error occured while generating salt",
-			StructAndMethod: "AuthService.GenerateSalt()",
-			Argument:        &args,
-			ChildAppError:   nil,
-			ChildError:      &err,
-		}
-		return nil, &generationError
-	}
-	return &salt, nil
 }

@@ -1,22 +1,15 @@
 package integration_test
 
 import (
-	"app/internal/controller"
-	controllercomponent "app/internal/controller_component"
 	"app/internal/database"
-	integration "app/internal/integration_test"
-	"app/internal/logs"
+	integration_test_tools "app/internal/integration_test"
 	"app/internal/model"
-	"app/internal/server"
-	"app/internal/service"
-	servicecomponent "app/internal/service_component"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"reflect"
 	"testing"
 	"time"
@@ -25,15 +18,6 @@ import (
 )
 
 var currentTime time.Time = time.Now()
-
-func insertUserAndAccountConfirmation(db *sql.DB, user model.User, accountConfirmation model.AccountConfirmation) {
-	ctx := context.Background()
-	unitOfWork := database.NewUnitOfWork(db)
-	unitOfWork.BeginTransaction()
-	unitOfWork.UserRepository().CreateUser(ctx, user)
-	unitOfWork.UserRepository().CreateAccountConfirmation(ctx, accountConfirmation)
-	unitOfWork.Commit()
-}
 
 func IsAccountConfirmed(t *testing.T, db *sql.DB, id uuid.UUID) bool {
 	ctx := context.Background()
@@ -188,28 +172,22 @@ var confirmAccountTestCases = []struct {
 }
 
 func TestIntegration_ConfirmAccount(t *testing.T) {
-	db, err := integration.SetupTestDB()
+	testServerTools := integration_test_tools.NewSetupIntegrationTestServerTools()
+	testDatabaseTools := integration_test_tools.NewSetupIntegrationTestDatabaseTools()
+	db, err := testDatabaseTools.SetupTestDB()
 	if err != nil {
 		t.Fatalf("failed setup database connection: %v", err)
 	}
-
 	defer db.Close()
 
-	userService := service.NewUserService(func() (database.UnitOfWork, error) {
-		return database.NewUnitOfWork(db), nil
-	}, servicecomponent.NewUuidGenerator())
-
-	logger := logs.NewLogger()
-	responseHandler := controllercomponent.NewResponseHandler()
-	userController := controller.NewUserController(userService, responseHandler, logger)
-
-	testServer := httptest.NewServer(server.NewServer("", 8080, userController, nil).Handler)
+	testServer := testServerTools.SetupTestServer(db)
 	defer testServer.Close()
 
 	for _, tc := range confirmAccountTestCases {
 		t.Run(tc.name, func(t *testing.T) {
 
-			insertUserAndAccountConfirmation(db, tc.user, tc.accountConfirmation)
+			testDatabaseTools.InsertUser(db, tc.user)
+			testDatabaseTools.InsertAccountConfirmation(db, tc.accountConfirmation)
 			url := fmt.Sprintf("/user/confirm-account/%s/%s", tc.confirmationCode, tc.securityCode)
 
 			req, err := http.NewRequest(http.MethodPut, testServer.URL+url, nil)
@@ -243,9 +221,8 @@ func TestIntegration_ConfirmAccount(t *testing.T) {
 			}
 
 			defer resp.Body.Close()
-			defer integration.TruncateAccountConfirmationTable(db)
-			defer integration.TruncateUserTable(db)
-
+			defer testDatabaseTools.TruncateAccountConfirmationTable(db)
+			defer testDatabaseTools.TruncateUserTable(db)
 		})
 	}
 

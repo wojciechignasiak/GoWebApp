@@ -1,19 +1,11 @@
 package integration_test
 
 import (
-	"app/internal/controller"
-	controllercomponent "app/internal/controller_component"
-	"app/internal/database"
-	integration "app/internal/integration_test"
-	"app/internal/logs"
-	"app/internal/server"
-	"app/internal/service"
-	servicecomponent "app/internal/service_component"
+	integration_test_tools "app/internal/integration_test"
 	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"reflect"
 	"testing"
 )
@@ -167,28 +159,15 @@ var registerUserTestCases = []struct {
 }
 
 func TestIntegration_RegisterUser(t *testing.T) {
-	db, err := integration.SetupTestDB()
+	testServerTools := integration_test_tools.NewSetupIntegrationTestServerTools()
+	testDatabaseTools := integration_test_tools.NewSetupIntegrationTestDatabaseTools()
+	db, err := testDatabaseTools.SetupTestDB()
 	if err != nil {
 		t.Fatalf("failed setup database connection: %v", err)
 	}
-
 	defer db.Close()
 
-	userService := service.NewUserService(func() (database.UnitOfWork, error) {
-		return database.NewUnitOfWork(db), nil
-	}, servicecomponent.NewUuidGenerator())
-
-	sessionManagementService := service.NewSessionManagementService(servicecomponent.NewUuidGenerator())
-
-	authService := service.NewAuthService(userService, sessionManagementService)
-
-	registrationService := service.NewRegistrationService(authService, userService, servicecomponent.NewCredentialsValidator(), servicecomponent.NewUuidGenerator())
-
-	logger := logs.NewLogger()
-	responseHandler := controllercomponent.NewResponseHandler()
-	authController := controller.NewAuthController(authService, registrationService, responseHandler, logger)
-
-	testServer := httptest.NewServer(server.NewServer("", 8080, nil, authController).Handler)
+	testServer := testServerTools.SetupTestServer(db)
 	defer testServer.Close()
 
 	for _, tc := range registerUserTestCases {
@@ -243,7 +222,9 @@ func TestIntegration_RegisterUser(t *testing.T) {
 					tc.name, tc.expectedResponse, responseBodyMap, tc.expectedStatusCode, resp.StatusCode)
 			}
 
-			defer integration.TruncateUserTable(db)
+			defer resp.Body.Close()
+			defer testDatabaseTools.TruncateUserTable(db)
+			defer testDatabaseTools.TruncateAccountConfirmationTable(db)
 		})
 	}
 }
