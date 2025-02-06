@@ -7,7 +7,9 @@ import (
 	"app/internal/model"
 	"app/internal/service"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"time"
 )
 
 type AuthController struct {
@@ -100,4 +102,47 @@ func (ac *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	})
 	ac.logger.LogRequest(http.StatusOK, "/auth/login")
 	ac.responseHandler.SendResponse(w, http.StatusOK, "Login successful")
+}
+
+func (ac *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("sessionId")
+	if err != nil {
+		fmt.Printf("Err: %v", err)
+		unauthorizedError := apperror.AppError{
+			StatusCode:      401,
+			Message:         "Unauthorized",
+			StructAndMethod: "AuthController.Logout()",
+			Argument:        nil,
+			ChildAppError:   nil,
+			ChildError:      nil,
+		}
+		ac.responseHandler.HandleError(w, &unauthorizedError)
+		return
+	}
+
+	if cookie == nil {
+		unauthorizedError := apperror.AppError{
+			StatusCode:      401,
+			Message:         "No session cookie",
+			StructAndMethod: "AuthController.Logout()",
+			Argument:        nil,
+			ChildAppError:   nil,
+			ChildError:      nil,
+		}
+		ac.responseHandler.HandleError(w, &unauthorizedError)
+		return
+	}
+	sessionID := cookie.Value
+	ac.authService.Logout(sessionID)
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "sessionId",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		Expires:  time.Unix(0, 0),
+	})
+	ac.logger.LogRequest(http.StatusOK, "/auth/logout")
+	ac.responseHandler.SendResponse(w, http.StatusOK, "Logout successful")
 }

@@ -13,6 +13,7 @@ import (
 
 type AuthService interface {
 	Login(ctx context.Context, credentials model.Credentials) (*uuid.UUID, *apperror.AppError)
+	Logout(sessionId string)
 }
 
 type authService struct {
@@ -133,4 +134,9 @@ func (as *authService) convertUserModelToUserSession(user model.User) *model.Use
 func (as *authService) verifyPassword(provided_password string, user_password, salt []byte) bool {
 	hashedPassword := as.sgaph.HashPassword(provided_password, salt)
 	return subtle.ConstantTimeCompare(*hashedPassword, user_password) == 1
+}
+
+func (as *authService) Logout(sessionId string) {
+	sessionIdUuid := uuid.MustParse(sessionId)
+	as.sms.DeleteSession(sessionIdUuid)
 }
