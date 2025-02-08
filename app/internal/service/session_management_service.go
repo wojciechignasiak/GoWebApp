@@ -12,7 +12,7 @@ import (
 
 type SessionManagementService interface {
 	CreateSession(userSession model.UserSession) (*uuid.UUID, *apperror.AppError)
-	GetUserSession(sessionId uuid.UUID) (*model.UserSession, bool)
+	GetUserSession(sessionId uuid.UUID) *model.UserSession
 	DeleteSession(sessionId uuid.UUID)
 }
 
@@ -56,11 +56,15 @@ func (sms *sessionManagementService) saveSession(sessionId uuid.UUID, userSessio
 	sms.sessions[sessionId] = userSession
 }
 
-func (sms *sessionManagementService) GetUserSession(sessionId uuid.UUID) (*model.UserSession, bool) {
+func (sms *sessionManagementService) GetUserSession(sessionId uuid.UUID) *model.UserSession {
 	sms.mu.RLock()
 	defer sms.mu.RUnlock()
 	userSession, exists := sms.sessions[sessionId]
-	return &userSession, exists
+	if !exists {
+		return nil
+	}
+
+	return &userSession
 }
 
 func (sms *sessionManagementService) DeleteSession(sessionId uuid.UUID) {

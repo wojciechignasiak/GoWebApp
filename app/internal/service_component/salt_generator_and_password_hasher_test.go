@@ -9,7 +9,7 @@ import (
 	"golang.org/x/crypto/argon2"
 )
 
-func TestGenerateSalt_Success(t *testing.T) {
+func TestGenerateSaltSuccess(t *testing.T) {
 	generator := &saltGeneratorAndPasswordHasher{
 		randReadFunc: func(b []byte) (int, error) {
 			for i := range b {
@@ -32,7 +32,7 @@ func TestGenerateSalt_Success(t *testing.T) {
 	}
 }
 
-func TestGenerateSalt_Error(t *testing.T) {
+func TestGenerateSaltError(t *testing.T) {
 	expectedErr := errors.New("mock read error")
 
 	generator := &saltGeneratorAndPasswordHasher{
