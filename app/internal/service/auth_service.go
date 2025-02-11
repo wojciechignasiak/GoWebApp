@@ -101,7 +101,7 @@ func (as *authService) Login(ctx context.Context, credentials model.Credentials)
 		}
 		return nil, &serviceError
 	}
-	userSession := as.convertUserModelToUserSession(*user)
+	userSession := as.convertUserModelToUserSessionModel(*user)
 	sessionId, sessionError := as.sms.CreateSession(*userSession)
 
 	if sessionError != nil {
@@ -121,7 +121,7 @@ func (as *authService) Login(ctx context.Context, credentials model.Credentials)
 	return sessionId, nil
 }
 
-func (as *authService) convertUserModelToUserSession(user model.User) *model.UserSession {
+func (as *authService) convertUserModelToUserSessionModel(user model.User) *model.UserSession {
 	userSession := model.UserSession{
 		Id:       user.Id,
 		Email:    user.Email,
