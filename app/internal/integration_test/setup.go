@@ -32,7 +32,8 @@ func (sitst *SetupIntegrationTestServerTools) SetupTestServer(db *sql.DB) *httpt
 		return database.NewUnitOfWork(db), nil
 	}, uuidGenerator)
 	sessionManagementService := service.NewSessionManagementService(uuidGenerator)
-	authService := service.NewAuthService(userService, sessionManagementService, saltGeneratorAndPasswordHasher)
+	onlineStatusService := service.NewOnlineStatusService()
+	authService := service.NewAuthService(userService, sessionManagementService, onlineStatusService, saltGeneratorAndPasswordHasher)
 
 	registrationService := service.NewRegistrationService(userService, saltGeneratorAndPasswordHasher, credentialsValidator, uuidGenerator)
 

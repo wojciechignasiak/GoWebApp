@@ -44,7 +44,9 @@ func main() {
 
 	sms := service.NewSessionManagementService(ug)
 
-	as := service.NewAuthService(us, sms, sgaph)
+	oss := service.NewOnlineStatusService()
+
+	as := service.NewAuthService(us, sms, oss, sgaph)
 
 	rs := service.NewRegistrationService(us, sgaph, cv, ug)
 
