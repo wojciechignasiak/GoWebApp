@@ -19,13 +19,15 @@ type AuthService interface {
 type authService struct {
 	us    UserService
 	sms   SessionManagementService
+	oss   OnlineStatusService
 	sgaph servicecomponent.SaltGeneratorAndPasswordHasher
 }
 
-func NewAuthService(us UserService, sms SessionManagementService, sgaph servicecomponent.SaltGeneratorAndPasswordHasher) AuthService {
+func NewAuthService(us UserService, sms SessionManagementService, oss OnlineStatusService, sgaph servicecomponent.SaltGeneratorAndPasswordHasher) AuthService {
 	return &authService{
 		us:    us,
 		sms:   sms,
+		oss:   oss,
 		sgaph: sgaph,
 	}
 }
@@ -118,6 +120,8 @@ func (as *authService) Login(ctx context.Context, credentials model.Credentials)
 		return nil, &serviceError
 	}
 
+	as.oss.SetUserStatusToOnline(user.Id)
+
 	return sessionId, nil
 }
 
@@ -138,5 +142,10 @@ func (as *authService) verifyPassword(provided_password string, user_password, s
 
 func (as *authService) Logout(sessionId string) {
 	sessionIdUuid := uuid.MustParse(sessionId)
+	userSession := as.sms.GetUserSession(sessionIdUuid)
+	if userSession == nil {
+		return
+	}
 	as.sms.DeleteSession(sessionIdUuid)
+	as.oss.SetUserStatusToOffline(userSession.Id)
 }
