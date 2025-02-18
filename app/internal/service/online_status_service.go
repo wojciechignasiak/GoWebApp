@@ -28,14 +28,14 @@ func (oss *onlineStatusService) SetUserStatusToOffline(userId uuid.UUID) {
 }
 
 func (oss *onlineStatusService) SetUserStatusToOnline(userId uuid.UUID) {
-	oss.mu.Lock()
+	oss.mu.RLock()
 	defer oss.mu.RUnlock()
 	oss.usersOnline[userId] = struct{}{}
 }
 
 func (oss *onlineStatusService) IsUserOnline(userId uuid.UUID) bool {
 	oss.mu.RLock()
-	defer oss.mu.Unlock()
+	defer oss.mu.RUnlock()
 	_, exists := oss.usersOnline[userId]
 	return exists
 }
