@@ -9,16 +9,18 @@ import (
 
 type UnitOfWork interface {
 	UserRepository() repository.UserRepository
+	MessageRepository() repository.MessageRepository
 	Commit() *apperror.AppError
 	Rollback() *apperror.AppError
 	BeginTransaction() *apperror.AppError
 }
 
 type unitOfWork struct {
-	db             *sql.DB
-	tx             *sql.Tx
-	userRepository repository.UserRepository
-	repoInitOnce   sync.Once
+	db                *sql.DB
+	tx                *sql.Tx
+	userRepository    repository.UserRepository
+	messageRepository repository.MessageRepository
+	repoInitOnce      sync.Once
 }
 
 func NewUnitOfWork(db *sql.DB) UnitOfWork {
@@ -60,6 +62,13 @@ func (u *unitOfWork) UserRepository() repository.UserRepository {
 		u.userRepository = repository.NewUserRepository(u.tx, u.db)
 	})
 	return u.userRepository
+}
+
+func (u *unitOfWork) MessageRepository() repository.MessageRepository {
+	u.repoInitOnce.Do(func() {
+		u.messageRepository = repository.NewMessageRepository(u.tx, u.db)
+	})
+	return u.messageRepository
 }
 
 func (u *unitOfWork) Commit() *apperror.AppError {
