@@ -91,27 +91,3 @@ func (mr *messageRepository) GetMessagesPaginated(ctx context.Context, chatId uu
 	}
 	return &messages, nil
 }
-
-// func (ur *userRepository) GetUserById(ctx context.Context, id uuid.UUID) (*model.User, *apperror.AppError) {
-// 	query := `SELECT * FROM user WHERE id = ?;`
-// 	row := ur.db.QueryRowContext(ctx, query, id)
-// 	var user model.User
-// 	err := row.Scan(&user.Id, &user.Username, &user.Email, &user.Password, &user.Salt, &user.RegistrationDate, &user.IsAccountConfirmed, &user.IsAccountDeleted)
-// 	if err != nil {
-// 		if err == sql.ErrNoRows {
-// 			return nil, nil
-// 		} else {
-// 			args := fmt.Sprintf("id: %s", id)
-// 			repositoryError := apperror.AppError{
-// 				StatusCode:      500,
-// 				Message:         "Database error occurred while trying to get user by id",
-// 				StructAndMethod: "userRepository.GetUserById()",
-// 				Argument:        &args,
-// 				ChildAppError:   nil,
-// 				ChildError:      &err,
-// 			}
-// 			return nil, &repositoryError
-// 		}
-// 	}
-// 	return &user, nil
-// }

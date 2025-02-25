@@ -56,7 +56,7 @@ func (us *userService) CreateUser(ctx context.Context, user model.User) *apperro
 			StructAndMethod: "UserService.RegisterUser()",
 			Argument:        &args,
 			ChildAppError:   uowError,
-			ChildError:      uowError.ChildError,
+			ChildError:      nil,
 		}
 		return &serviceError
 	}
@@ -69,7 +69,7 @@ func (us *userService) CreateUser(ctx context.Context, user model.User) *apperro
 			StructAndMethod: "UserService.createUser()",
 			Argument:        &args,
 			ChildAppError:   repositoryError,
-			ChildError:      repositoryError.ChildError,
+			ChildError:      nil,
 		}
 		return &serviceError
 	}
@@ -84,12 +84,24 @@ func (us *userService) CreateUser(ctx context.Context, user model.User) *apperro
 			StructAndMethod: "UserService.RegisterUser()",
 			Argument:        &args,
 			ChildAppError:   accountConfirmationError,
-			ChildError:      accountConfirmationError.ChildError,
+			ChildError:      nil,
 		}
 		return &serviceError
 	}
 
-	uow.Commit()
+	uowError = uow.Commit()
+	if uowError != nil {
+		args := fmt.Sprintf("newUser: anonymized")
+		serviceError := apperror.AppError{
+			StatusCode:      uowError.StatusCode,
+			Message:         uowError.Message,
+			StructAndMethod: "UserService.RegisterUser()",
+			Argument:        &args,
+			ChildAppError:   uowError,
+			ChildError:      nil,
+		}
+		return &serviceError
+	}
 	return nil
 }
 
@@ -120,7 +132,7 @@ func (us *userService) GetUserByEmail(ctx context.Context, email string) (*model
 			StructAndMethod: "UserService.GetUserByEmail()",
 			Argument:        &args,
 			ChildAppError:   repositoryError,
-			ChildError:      repositoryError.ChildError,
+			ChildError:      nil,
 		}
 
 		return nil, &serviceError
@@ -156,7 +168,7 @@ func (us *userService) GetUserByUsername(ctx context.Context, username string) (
 			StructAndMethod: "UserService.GetUserByUsername()",
 			Argument:        &args,
 			ChildAppError:   repositoryError,
-			ChildError:      repositoryError.ChildError,
+			ChildError:      nil,
 		}
 
 		return nil, &serviceError
@@ -175,7 +187,7 @@ func (us *userService) createAccountConfirmation(ctx context.Context, uow databa
 			StructAndMethod: "UserService.createAccountConfirmation()",
 			Argument:        &args,
 			ChildAppError:   generationError,
-			ChildError:      generationError.ChildError,
+			ChildError:      nil,
 		}
 		return &serviceError
 	}
@@ -196,7 +208,7 @@ func (us *userService) createAccountConfirmation(ctx context.Context, uow databa
 			StructAndMethod: "UserService.createAccountConfirmation()",
 			Argument:        &args,
 			ChildAppError:   repositoryError,
-			ChildError:      repositoryError.ChildError,
+			ChildError:      nil,
 		}
 		return &serviceError
 	}
@@ -219,7 +231,7 @@ func (us *userService) ConfirmAccount(ctx context.Context, confirmAccount model.
 			StructAndMethod: "UserService.ConfirmAccount()",
 			Argument:        &args,
 			ChildAppError:   getAccountConfirmationError,
-			ChildError:      getAccountConfirmationError.ChildError,
+			ChildError:      nil,
 		}
 		return &serviceError
 	}
@@ -258,7 +270,7 @@ func (us *userService) ConfirmAccount(ctx context.Context, confirmAccount model.
 			StructAndMethod: "UserService.ConfirmAccount()",
 			Argument:        &args,
 			ChildAppError:   getUserError,
-			ChildError:      getUserError.ChildError,
+			ChildError:      nil,
 		}
 		return &serviceError
 	}
@@ -312,7 +324,7 @@ func (us *userService) ConfirmAccount(ctx context.Context, confirmAccount model.
 			StructAndMethod: "UserService.ConfirmAccount()",
 			Argument:        &args,
 			ChildAppError:   uowError,
-			ChildError:      uowError.ChildError,
+			ChildError:      nil,
 		}
 		return &serviceError
 	}
@@ -327,7 +339,7 @@ func (us *userService) ConfirmAccount(ctx context.Context, confirmAccount model.
 			StructAndMethod: "UserService.ConfirmAccount()",
 			Argument:        &args,
 			ChildAppError:   uowError,
-			ChildError:      confirmUserAccountError.ChildError,
+			ChildError:      nil,
 		}
 		return &serviceError
 	}
@@ -362,7 +374,7 @@ func (us *userService) getAccountConfirmationByConfirmationCode(ctx context.Cont
 			StructAndMethod: "UserService.getAccountConfirmationByConfirmationCode()",
 			Argument:        &args,
 			ChildAppError:   repositoryError,
-			ChildError:      repositoryError.ChildError,
+			ChildError:      nil,
 		}
 
 		return nil, &serviceError
@@ -398,7 +410,7 @@ func (us *userService) getUserById(ctx context.Context, userId uuid.UUID) (*mode
 			StructAndMethod: "UserService.GetUserById()",
 			Argument:        &args,
 			ChildAppError:   repositoryError,
-			ChildError:      repositoryError.ChildError,
+			ChildError:      nil,
 		}
 
 		return nil, &serviceError
@@ -417,7 +429,7 @@ func (us *userService) setUserIsConfirmedStatusToTrue(ctx context.Context, uow d
 			StructAndMethod: "UserService.setUserIsConfirmedStatusToTrue()",
 			Argument:        &args,
 			ChildAppError:   repositoryError,
-			ChildError:      repositoryError.ChildError,
+			ChildError:      nil,
 		}
 		return &serviceError
 	}

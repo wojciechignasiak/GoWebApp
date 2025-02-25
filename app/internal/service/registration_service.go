@@ -129,7 +129,7 @@ func (rs *registrationService) checkisUsernameOrEmailDuplicate(ctx context.Conte
 			StructAndMethod: "RegistrationService.checkisUsernameOrEmailDuplicate()",
 			Argument:        &args,
 			ChildAppError:   err,
-			ChildError:      err.ChildError,
+			ChildError:      nil,
 		}
 		return &serviceError
 	}
@@ -155,7 +155,7 @@ func (rs *registrationService) checkisUsernameOrEmailDuplicate(ctx context.Conte
 			StructAndMethod: "RegistrationService.checkisUsernameOrEmailDuplicate()",
 			Argument:        &args,
 			ChildAppError:   err,
-			ChildError:      err.ChildError,
+			ChildError:      nil,
 		}
 		return &serviceError
 	}
