@@ -51,7 +51,7 @@ func (ms *messageService) CreateMessage(ctx context.Context, message model.Messa
 			StructAndMethod: "UserService.CreateMessage()",
 			Argument:        &args,
 			ChildAppError:   uowError,
-			ChildError:      uowError.ChildError,
+			ChildError:      nil,
 		}
 		return &serviceError
 	}
@@ -68,7 +68,19 @@ func (ms *messageService) CreateMessage(ctx context.Context, message model.Messa
 		}
 		return &serviceError
 	}
-	uow.Commit()
+	uowError = uow.Commit()
+	if uowError != nil {
+		args := fmt.Sprintf("message: %v", message)
+		serviceError := apperror.AppError{
+			StatusCode:      uowError.StatusCode,
+			Message:         uowError.Message,
+			StructAndMethod: "UserService.CreateMessage()",
+			Argument:        &args,
+			ChildAppError:   uowError,
+			ChildError:      nil,
+		}
+		return &serviceError
+	}
 	return nil
 }
 
