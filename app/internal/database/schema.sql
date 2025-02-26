@@ -16,6 +16,8 @@ CREATE TABLE account_confirmation (
 );
 CREATE TABLE chat (
     id CHAR(36) NOT NULL PRIMARY KEY,
+    user_id CHAR(36) NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES user(id)
     name VARCHAR(100)
 );
 CREATE TABLE chat_participant (

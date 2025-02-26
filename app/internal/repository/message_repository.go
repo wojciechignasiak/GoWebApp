@@ -89,5 +89,9 @@ func (mr *messageRepository) GetMessagesPaginated(ctx context.Context, chatId uu
 		}
 		messages = append(messages, message)
 	}
-	return &messages, nil
+	if len(messages) == 0 {
+		return nil, nil
+	} else {
+		return &messages, nil
+	}
 }
