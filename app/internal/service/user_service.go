@@ -17,6 +17,7 @@ type UserService interface {
 	ConfirmAccount(ctx context.Context, confirmAccount model.ConfirmAccount) *apperror.AppError
 	GetUserByUsername(ctx context.Context, username string) (*model.User, *apperror.AppError)
 	GetUserByEmail(ctx context.Context, email string) (*model.User, *apperror.AppError)
+	GetUserById(ctx context.Context, userId uuid.UUID) (*model.User, *apperror.AppError)
 }
 
 type userService struct {
@@ -261,7 +262,7 @@ func (us *userService) ConfirmAccount(ctx context.Context, confirmAccount model.
 		return &serviceError
 	}
 
-	user, getUserError := us.getUserById(ctx, accountConfirmation.UserId)
+	user, getUserError := us.GetUserById(ctx, accountConfirmation.UserId)
 	if getUserError != nil {
 		args := fmt.Sprintf("confirmAccount: %v", confirmAccount)
 		serviceError := apperror.AppError{
@@ -383,7 +384,7 @@ func (us *userService) getAccountConfirmationByConfirmationCode(ctx context.Cont
 	return accountConfirmation, nil
 }
 
-func (us *userService) getUserById(ctx context.Context, userId uuid.UUID) (*model.User, *apperror.AppError) {
+func (us *userService) GetUserById(ctx context.Context, userId uuid.UUID) (*model.User, *apperror.AppError) {
 	uow, err := us.uowFactory()
 
 	if err != nil {
@@ -391,7 +392,7 @@ func (us *userService) getUserById(ctx context.Context, userId uuid.UUID) (*mode
 		serviceError := apperror.AppError{
 			StatusCode:      500,
 			Message:         "Error occured while creating unit of work in user service",
-			StructAndMethod: "UserService.getUserById()",
+			StructAndMethod: "UserService.GetUserById()",
 			Argument:        &args,
 			ChildAppError:   nil,
 			ChildError:      &err,

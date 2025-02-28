@@ -3,7 +3,8 @@ package model
 import "github.com/google/uuid"
 
 type NewChat struct {
-	name string
+	UserId uuid.UUID
+	name   string
 }
 
 type Chat struct {

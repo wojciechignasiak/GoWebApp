@@ -16,5 +16,6 @@ type Message struct {
 
 type NewMessage struct {
 	ChatId  uuid.UUID `json:"chat_id" db:"chat_id"`
+	UserId  uuid.UUID `json:"user_id" db:"user_id"`
 	Content string    `json:"content" db:"content"`
 }

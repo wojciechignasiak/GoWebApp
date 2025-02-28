@@ -1,11 +1,20 @@
 package service
 
+import servicecomponent "app/internal/service_component"
+
 type ChatService interface {
 }
 
 type chatService struct {
+	us UserService
+	ms MessageService
+	ug servicecomponent.UuidGenerator
 }
 
-func NewChatService() ChatService {
-	return &chatService{}
+func NewChatService(us UserService, ms MessageService, ug servicecomponent.UuidGenerator) ChatService {
+	return &chatService{
+		us: us,
+		ms: ms,
+		ug: ug,
+	}
 }
