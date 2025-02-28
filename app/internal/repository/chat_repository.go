@@ -177,43 +177,58 @@ func (cr *chatRepository) RemoveChatParticipant(ctx context.Context, chatPartici
 	return nil
 }
 
-// func GetChatParticipants(ctx context.Context, chatId uuid.UUID) {
-// 	query := `
-// 		SELECT * FROM ch;
-// 	`
-// 	rows, err := cr.db.QueryContext(ctx, query, userId)
-// 	if err != nil {
-// 		args := fmt.Sprintf("userId: %v", userId)
-// 		repoError := apperror.AppError{
-// 			StatusCode:      500,
-// 			Message:         "Database error occurred while trying to get chats in which user participate",
-// 			StructAndMethod: "chatRepository.GetChatsInWhichUserParticipate()",
-// 			Argument:        &args,
-// 			ChildAppError:   nil,
-// 			ChildError:      &err,
-// 		}
-// 		return nil, &repoError
-// 	}
-// 	var chats []model.Chat
-// 	for rows.Next() {
-// 		var chat model.Chat
-// 		if err := rows.Scan(&chat.Id, &chat.UserId, &chat.Name); err != nil {
-// 			args := fmt.Sprintf("userId: %v", userId)
-// 			repoError := apperror.AppError{
-// 				StatusCode:      500,
-// 				Message:         "Database error occurred while trying to get chats in which user participate",
-// 				StructAndMethod: "chatRepository.GetUserOwnedChats()",
-// 				Argument:        &args,
-// 				ChildAppError:   nil,
-// 				ChildError:      &err,
-// 			}
-// 			return nil, &repoError
-// 		}
-// 		chats = append(chats, chat)
-// 	}
-// 	if len(chats) == 0 {
-// 		return nil, nil
-// 	} else {
-// 		return &chats, nil
-// 	}
-// }
+func (cr *chatRepository) GetChatParticipants(ctx context.Context, chatId uuid.UUID) (*[]uuid.UUID, *apperror.AppError) {
+	query := `
+		SELECT user_id FROM chat_participant WHERE chat_id = ?;
+	`
+	rows, err := cr.db.QueryContext(ctx, query, chatId)
+	if err != nil {
+		args := fmt.Sprintf("chatId: %v", chatId)
+		repoError := apperror.AppError{
+			StatusCode:      500,
+			Message:         "Database error occurred while trying to get chat participants",
+			StructAndMethod: "chatRepository.GetChatParticipants()",
+			Argument:        &args,
+			ChildAppError:   nil,
+			ChildError:      &err,
+		}
+		return nil, &repoError
+	}
+	var usersId []uuid.UUID
+	for rows.Next() {
+		var userId string
+		err := rows.Scan(&userId)
+		if err != nil {
+			args := fmt.Sprintf("chatId: %v", chatId)
+			repoError := apperror.AppError{
+				StatusCode:      500,
+				Message:         "Database error occurred while trying to get chat participants",
+				StructAndMethod: "chatRepository.GetChatParticipants()",
+				Argument:        &args,
+				ChildAppError:   nil,
+				ChildError:      &err,
+			}
+			return nil, &repoError
+		}
+		userIdUuid, err := uuid.Parse(userId)
+		if err != nil {
+			args := fmt.Sprintf("chatId: %v", chatId)
+			repoError := apperror.AppError{
+				StatusCode:      500,
+				Message:         "Database error occurred while trying to get chat participants",
+				StructAndMethod: "chatRepository.GetChatParticipants()",
+				Argument:        &args,
+				ChildAppError:   nil,
+				ChildError:      &err,
+			}
+			return nil, &repoError
+		}
+
+		usersId = append(usersId, userIdUuid)
+	}
+	if len(usersId) == 0 {
+		return nil, nil
+	} else {
+		return &usersId, nil
+	}
+}
