@@ -30,8 +30,8 @@ func NewMessageService(uowFactory func() (database.UnitOfWork, error), ug servic
 }
 
 func (ms *messageService) CreateMessage(ctx context.Context, newMessage model.NewMessage) *apperror.AppError {
-	isMessageContentNotTooLong := ms.validateNewMessageLength(newMessage.Content)
-	if isMessageContentNotTooLong != false {
+	isMessageTooLong := ms.validateNewMessageLength(newMessage.Content)
+	if isMessageTooLong {
 		args := fmt.Sprintf("newMessage: %v", newMessage)
 		serviceError := apperror.AppError{
 			StatusCode:      400,
@@ -143,10 +143,7 @@ func (ms *messageService) GetMessagesPaginated(ctx context.Context, chatId uuid.
 }
 
 func (ms *messageService) validateNewMessageLength(messageContent string) bool {
-	if len(messageContent) > 500 {
-		return false
-	}
-	return true
+	return len(messageContent) > 500
 }
 
 func (ms *messageService) convertNewMessageToMessage(newMessage model.NewMessage) (*model.Message, *apperror.AppError) {
