@@ -62,7 +62,7 @@ func (as *authService) Login(ctx context.Context, credentials model.Credentials)
 		return nil, &serviceError
 	}
 
-	if user.IsAccountConfirmed == false {
+	if !user.IsAccountConfirmed {
 		credentials.Password = "anonymized"
 		args := fmt.Sprintf("credentials %v", credentials)
 		serviceError := apperror.AppError{
@@ -76,7 +76,7 @@ func (as *authService) Login(ctx context.Context, credentials model.Credentials)
 		return nil, &serviceError
 	}
 
-	if user.IsAccountDeleted == true {
+	if user.IsAccountDeleted {
 		credentials.Password = "anonymized"
 		args := fmt.Sprintf("credentials %v", credentials)
 		serviceError := apperror.AppError{
@@ -90,7 +90,7 @@ func (as *authService) Login(ctx context.Context, credentials model.Credentials)
 		return nil, &serviceError
 	}
 	isPasswordCorrect := as.verifyPassword(credentials.Password, user.Password, user.Salt)
-	if isPasswordCorrect == false {
+	if !isPasswordCorrect {
 		credentials.Password = "anonymized"
 		args := fmt.Sprintf("credentials %v", credentials)
 		serviceError := apperror.AppError{

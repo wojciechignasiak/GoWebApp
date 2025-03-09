@@ -36,7 +36,7 @@ func (us *userService) CreateUser(ctx context.Context, user model.User) *apperro
 
 	uow, err := us.uowFactory()
 	if err != nil {
-		args := fmt.Sprintf("newUser: anonymized")
+		args := "newUser: anonymized"
 		serviceError := apperror.AppError{
 			StatusCode:      500,
 			Message:         "error occured while creating unit of work in user service",
@@ -50,7 +50,7 @@ func (us *userService) CreateUser(ctx context.Context, user model.User) *apperro
 
 	uowError := uow.BeginTransaction()
 	if uowError != nil {
-		args := fmt.Sprintf("newUser: anonymized")
+		args := "newUser: anonymized"
 		serviceError := apperror.AppError{
 			StatusCode:      uowError.StatusCode,
 			Message:         uowError.Message,
@@ -63,7 +63,7 @@ func (us *userService) CreateUser(ctx context.Context, user model.User) *apperro
 	}
 	repositoryError := uow.UserRepository().CreateUser(ctx, user)
 	if repositoryError != nil {
-		args := fmt.Sprintf("newUser: anonymized")
+		args := "newUser: anonymized"
 		serviceError := apperror.AppError{
 			StatusCode:      repositoryError.StatusCode,
 			Message:         repositoryError.Message,
@@ -78,7 +78,7 @@ func (us *userService) CreateUser(ctx context.Context, user model.User) *apperro
 	accountConfirmationError := us.createAccountConfirmation(ctx, uow, user.Id)
 	if accountConfirmationError != nil {
 		uow.Rollback()
-		args := fmt.Sprintf("newUser: anonymized")
+		args := "newUser: anonymized"
 		serviceError := apperror.AppError{
 			StatusCode:      accountConfirmationError.StatusCode,
 			Message:         accountConfirmationError.Message,
@@ -92,7 +92,7 @@ func (us *userService) CreateUser(ctx context.Context, user model.User) *apperro
 
 	uowError = uow.Commit()
 	if uowError != nil {
-		args := fmt.Sprintf("newUser: anonymized")
+		args := "newUser: anonymized"
 		serviceError := apperror.AppError{
 			StatusCode:      uowError.StatusCode,
 			Message:         uowError.Message,
