@@ -18,3 +18,5 @@ func NewChatService(us UserService, ms MessageService, ug servicecomponent.UuidG
 		ug: ug,
 	}
 }
+
+// func (cs *chatService) CreateNewChat()
