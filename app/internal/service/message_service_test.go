@@ -3,6 +3,7 @@ package service
 import (
 	"app/internal/model"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -52,5 +53,41 @@ func TestValidateNewMessageLength(t *testing.T) {
 				t.Errorf("scenario: %s, expected: %v, got: %v", tc.name, tc.expectedResult, result)
 			}
 		})
+	}
+}
+
+func TestConvertNewMessageToMessage(t *testing.T) {
+	newMessage := model.NewMessage{
+		ChatId:  uuid.MustParse("06eed8ac-9339-4b76-b8df-b487e0276e5f"),
+		UserId:  uuid.MustParse("06eed8ac-9339-4b76-b8df-b487e0276e5f"),
+		Content: "Here goes message content",
+	}
+
+	messageService := &messageService{}
+
+	messageID := uuid.MustParse("06eed8ac-9339-4b76-b8df-b487e0276e5f")
+	createdAt := time.Now()
+
+	message := messageService.convertNewMessageToMessage(newMessage, messageID, createdAt)
+
+	var _, ok = interface{}(*message).(model.Message)
+	if !ok {
+		t.Errorf("Expected message to be of type model.Message, got %T", message)
+	}
+
+	if message.Id != messageID {
+		t.Errorf("Expected ID to be %v, got %v", messageID, message.Id)
+	}
+	if message.ChatId != newMessage.ChatId {
+		t.Errorf("Expected ChatId to be %v, got %v", newMessage.ChatId, message.ChatId)
+	}
+	if message.UserId != newMessage.UserId {
+		t.Errorf("Expected UserId to be %v, got %v", newMessage.UserId, message.UserId)
+	}
+	if message.Content != newMessage.Content {
+		t.Errorf("Expected Content to be %q, got %q", newMessage.Content, message.Content)
+	}
+	if message.Created.Unix() != createdAt.Unix() {
+		t.Errorf("Expected CreatedAt to be %v, got %v", createdAt, message.Created)
 	}
 }

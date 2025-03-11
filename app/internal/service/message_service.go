@@ -44,19 +44,25 @@ func (ms *messageService) CreateMessage(ctx context.Context, newMessage model.Ne
 		return &serviceError
 	}
 
-	message, convertionError := ms.convertNewMessageToMessage(newMessage)
-	if convertionError != nil {
+	uuid, generationError := ms.ug.GenerateUuid()
+
+	if generationError != nil {
 		args := fmt.Sprintf("newMessage: %v", newMessage)
 		serviceError := apperror.AppError{
-			StatusCode:      500,
-			Message:         "error occurred durning message conversion",
+			StatusCode:      generationError.StatusCode,
+			Message:         generationError.Message,
 			StructAndMethod: "MessageService.CreateMessage()",
 			Argument:        &args,
-			ChildAppError:   convertionError,
+			ChildAppError:   generationError,
 			ChildError:      nil,
 		}
 		return &serviceError
 	}
+
+	currentTime := time.Now()
+
+	message := ms.convertNewMessageToMessage(newMessage, *uuid, currentTime)
+
 	uow, err := ms.uowFactory()
 	if err != nil {
 		args := fmt.Sprintf("newMessage: %v", newMessage)
@@ -146,29 +152,13 @@ func (ms *messageService) validateNewMessageLength(messageContent string) bool {
 	return len(messageContent) > 500
 }
 
-func (ms *messageService) convertNewMessageToMessage(newMessage model.NewMessage) (*model.Message, *apperror.AppError) {
-	uuid, generationError := ms.ug.GenerateUuid()
-
-	if generationError != nil {
-		args := fmt.Sprintf("newMessage: %v", newMessage)
-		serviceError := apperror.AppError{
-			StatusCode:      generationError.StatusCode,
-			Message:         generationError.Message,
-			StructAndMethod: "UserService.convertNewMessageToMessage()",
-			Argument:        &args,
-			ChildAppError:   generationError,
-			ChildError:      nil,
-		}
-		return nil, &serviceError
-	}
-
-	currentTime := time.Now()
+func (ms *messageService) convertNewMessageToMessage(newMessage model.NewMessage, id uuid.UUID, currentTime time.Time) *model.Message {
 	message := model.Message{
-		Id:      *uuid,
+		Id:      id,
 		UserId:  newMessage.UserId,
 		ChatId:  newMessage.ChatId,
 		Content: newMessage.Content,
 		Created: currentTime,
 	}
-	return &message, nil
+	return &message
 }
