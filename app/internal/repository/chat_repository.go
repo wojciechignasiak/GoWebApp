@@ -11,6 +11,13 @@ import (
 )
 
 type ChatRepository interface {
+	CreateChat(ctx context.Context, chat *model.Chat) *apperror.AppError
+	GetChatById(ctx context.Context, chatId uuid.UUID) (*model.Chat, *apperror.AppError)
+	GetUserOwnedChats(ctx context.Context, userId uuid.UUID) (*[]model.Chat, *apperror.AppError)
+	GetChatsInWhichUserParticipate(ctx context.Context, userId uuid.UUID) (*[]model.Chat, *apperror.AppError)
+	AddChatParticipant(ctx context.Context, chatParticipant *model.ChatParticipant) *apperror.AppError
+	RemoveChatParticipant(ctx context.Context, chatParticipant *model.ChatParticipant) *apperror.AppError
+	GetChatParticipants(ctx context.Context, chatId uuid.UUID) (*[]uuid.UUID, *apperror.AppError)
 }
 
 type chatRepository struct {
@@ -28,7 +35,7 @@ func NewChatRepository(tx *sql.Tx, db *sql.DB) ChatRepository {
 	}
 }
 
-func (cr *chatRepository) CreateChat(ctx context.Context, chat model.Chat) *apperror.AppError {
+func (cr *chatRepository) CreateChat(ctx context.Context, chat *model.Chat) *apperror.AppError {
 	query := `
 		INSERT INTO chat (id, user_id, name)
 		VALUES (?,?,?);
@@ -47,6 +54,27 @@ func (cr *chatRepository) CreateChat(ctx context.Context, chat model.Chat) *appe
 		return &repoError
 	}
 	return nil
+}
+
+func (cr *chatRepository) GetChatById(ctx context.Context, chatId uuid.UUID) (*model.Chat, *apperror.AppError) {
+	query := `
+		SELECT * FROM chat WHERE id = ?;
+	`
+	row := cr.db.QueryRowContext(ctx, query, chatId)
+	var chat model.Chat
+	if err := row.Scan(&chat.Id, &chat.UserId, &chat.Name); err != nil {
+		args := fmt.Sprintf("chatId: %v", chatId)
+		repoError := apperror.AppError{
+			StatusCode:      500,
+			Message:         "Database error occurred while trying to get chat by id",
+			StructAndMethod: "chatRepository.GetUserOwnedChats()",
+			Argument:        &args,
+			ChildAppError:   nil,
+			ChildError:      &err,
+		}
+		return nil, &repoError
+	}
+	return &chat, nil
 }
 
 func (cr *chatRepository) GetUserOwnedChats(ctx context.Context, userId uuid.UUID) (*[]model.Chat, *apperror.AppError) {
@@ -135,14 +163,14 @@ func (cr *chatRepository) GetChatsInWhichUserParticipate(ctx context.Context, us
 	}
 }
 
-func (cr *chatRepository) AddChatParticipant(ctx context.Context, chatParticipant model.ChatParticipant) *apperror.AppError {
+func (cr *chatRepository) AddChatParticipant(ctx context.Context, chatParticipant *model.ChatParticipant) *apperror.AppError {
 	query := `
 		INSERT INTO chat_participant (chat_id, user_id)
 		VALUES (?,?);
 	`
 	_, err := cr.tx.ExecContext(ctx, query, chatParticipant.ChatId, chatParticipant.UserId)
 	if err != nil {
-		args := fmt.Sprintf("chatParticipant: %v", chatParticipant)
+		args := fmt.Sprintf("chatParticipant: %v", *chatParticipant)
 		repoError := apperror.AppError{
 			StatusCode:      500,
 			Message:         "Database error occurred while trying to add participant to chat",
@@ -156,14 +184,14 @@ func (cr *chatRepository) AddChatParticipant(ctx context.Context, chatParticipan
 	return nil
 }
 
-func (cr *chatRepository) RemoveChatParticipant(ctx context.Context, chatParticipant model.ChatParticipant) *apperror.AppError {
+func (cr *chatRepository) RemoveChatParticipant(ctx context.Context, chatParticipant *model.ChatParticipant) *apperror.AppError {
 	query := `
 		DELETE FROM chat_participant WHERE chat_id = ? AND user_id = ?;
 	`
 
 	_, err := cr.tx.ExecContext(ctx, query, chatParticipant.ChatId, chatParticipant.UserId)
 	if err != nil {
-		args := fmt.Sprintf("chatParticipant: %v", chatParticipant)
+		args := fmt.Sprintf("chatParticipant: %v", *chatParticipant)
 		repoError := apperror.AppError{
 			StatusCode:      500,
 			Message:         "Database error occurred while trying to remove participant from chat",

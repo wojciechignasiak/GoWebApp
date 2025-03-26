@@ -10,6 +10,7 @@ import (
 type UnitOfWork interface {
 	UserRepository() repository.UserRepository
 	MessageRepository() repository.MessageRepository
+	ChatRepository() repository.ChatRepository
 	Commit() *apperror.AppError
 	Rollback() *apperror.AppError
 	BeginTransaction() *apperror.AppError
@@ -18,6 +19,7 @@ type UnitOfWork interface {
 type unitOfWork struct {
 	db                *sql.DB
 	tx                *sql.Tx
+	chatRepository    repository.ChatRepository
 	userRepository    repository.UserRepository
 	messageRepository repository.MessageRepository
 	repoInitOnce      sync.Once
@@ -69,6 +71,13 @@ func (u *unitOfWork) MessageRepository() repository.MessageRepository {
 		u.messageRepository = repository.NewMessageRepository(u.tx, u.db)
 	})
 	return u.messageRepository
+}
+
+func (u *unitOfWork) ChatRepository() repository.ChatRepository {
+	u.repoInitOnce.Do(func() {
+		u.chatRepository = repository.NewChatRepository(u.tx, u.db)
+	})
+	return u.chatRepository
 }
 
 func (u *unitOfWork) Commit() *apperror.AppError {
